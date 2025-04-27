@@ -13,7 +13,7 @@ import { FcGoogle } from "react-icons/fc";
 async function handleGoogleSignIn() {
   "use server"
   await signIn("google",
-    { callbackUrl: "/dashboard" }
+    { redirectTo: "/dashboard" }
   );
 }
 
