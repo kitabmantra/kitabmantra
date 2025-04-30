@@ -1,6 +1,6 @@
 import mongoose, {Schema} from "mongoose"
 
-export const userSchema = new Schema({
+const userSchema = new Schema({
     userId : {
         type : String,
         required : true,
@@ -20,6 +20,10 @@ export const userSchema = new Schema({
         type : String,
         required : true,
         unique : true,
+    },
+    phoneNumber : {
+        type : String,
+        required : true,
     },
     address  :{
         type : String,

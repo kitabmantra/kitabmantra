@@ -8,7 +8,7 @@ export const getCurrentUser = async() =>{
     if (!session) return null;
     const userModel = await getUserModel();
     const user = await userModel.findOne({
-        userId : session.user.userId
+        userId : session.user?.id
     })
     if (!user) {
         return null;

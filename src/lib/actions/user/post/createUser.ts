@@ -1,19 +1,43 @@
 "use server"
 
-import { userSchema } from "@/lib/models/user.model";
-import { getMongoClient } from "@/lib/utils/mongoClients";
+import { getUserModel } from "@/lib/hooks/database/get-user-model";
 
 
-export const createUser = async ({ userId, name }: { userId: string, name: string }) => {
-    const { mongooseConn } = await getMongoClient("users");
+interface CreateUserProps{
+    userName : string,
+    name : string,
+    email : string,
+    image ?: string,
+    phoneNumber : string,
+    userId : string,
+}
 
-    const UserModel = mongooseConn.models.Book || mongooseConn.model("User", userSchema);
-
-    const createdUser = await UserModel.create({ userId, name });
-
-    if (!createdUser) {
-        return { status: 400, message: "User not created" }
+export const createUser = async(data : CreateUserProps) =>{
+    try {
+        const {userName, name, email, image, phoneNumber, userId} = data;
+        if(!userName.trim() || !name.trim() || !email.trim() || !phoneNumber.trim() || !userId.trim()){
+            throw new Error("All fields are required")
+        }
+        const userModel = await getUserModel();
+        const newUser = await userModel.create({
+            userName,
+            name,
+            email,
+            image,
+            phoneNumber,
+            userId,
+        })
+        if(!newUser){
+            throw new Error("Failed to create user")
+        }
+        return {
+            success : true,
+            message : "User created successfully",
+        }
+    } catch (error) {
+        return {
+            error : error || "something went wrong",
+            success : false,
+        }
     }
-
-    return { status: 200 }
 }

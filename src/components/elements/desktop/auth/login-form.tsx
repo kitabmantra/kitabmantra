@@ -1,4 +1,3 @@
-import { signIn } from "@/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,14 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { signInWithGoogle } from "@/lib/actions/auth/sign-in";
 import { FcGoogle } from "react-icons/fc";
 
-async function handleGoogleSignIn() {
-  "use server"
-  await signIn("google",
-    { redirectTo: "/dashboard" }
-  );
-}
+
 
 export default function LoginForm() {
   return (
@@ -29,7 +24,7 @@ export default function LoginForm() {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <form action={handleGoogleSignIn}>
+        <form action={signInWithGoogle}>
           <Button
             className="w-full cursor-pointer"
             variant="outline"
