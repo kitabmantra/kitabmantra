@@ -1,16 +1,32 @@
-import withPWA from 'next-pwa';
+import type { NextConfig } from "next";
+import path from 'path';
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-    reactStrictMode: true, 
-    compiler: {
-        removeConsole: process.env.NODE_ENV !== "development"
+const nextConfig: NextConfig = {
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.alias['yjs'] = path.resolve(__dirname, 'node_modules/yjs')
     }
+    return config
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
+      {
+        protocol : 'https',
+        hostname : 'utfs.io',
+        pathname : '/**'
+      },
+      {
+        protocol : 'https',
+        hostname : 'cn0d0b79y9.ufs.sh',
+        pathname : '/**'
+      }
+    ],
+  },
 };
 
-export default withPWA({
-    dest: "public",      
-    disable: process.env.NODE_ENV === "development",    
-    register: true,         
-    skipWaiting: true,      
-})(nextConfig);
+export default nextConfig;

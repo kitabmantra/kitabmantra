@@ -12,7 +12,7 @@ export const createBook = async ({
 }: CreateBookProps) => {
     const BookModel = await getBookModel();
     const user = await getCurrentUser()
-    console.log(user);
+   
     if (user?.userId) {
         try {
             const createdBook = await BookModel.create({

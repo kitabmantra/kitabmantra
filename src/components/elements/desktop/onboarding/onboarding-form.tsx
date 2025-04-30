@@ -81,7 +81,7 @@ function OnboardingForm({ session }: { session: Session }) {
           toast.success(response.message)
           router.push("/dashboard")
         } else if (response.error) {
-          throw new Error(response.error as string)
+         toast.error(response.error as string)
         }
       } catch (error) {
         console.error("Error creating user:", error)

@@ -1,8 +1,6 @@
 "use server"
 
 import { getUserModel } from "@/lib/hooks/database/get-user-model";
-
-
 interface CreateUserProps{
     userName : string,
     name : string,

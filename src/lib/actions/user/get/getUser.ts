@@ -1,7 +1,5 @@
 "use server"
-
 import { getUserModel } from "@/lib/hooks/database/get-user-model";
-
 
 export const getUser = async (userId: string) => {
     const UserModel = await getUserModel()
