@@ -36,10 +36,10 @@ export default function RootLayout({
         <QueryProvider>
           <SessionProviderLayout>
             {children}
-            <Toaster />
-            <Analytics />
           </SessionProviderLayout>
         </QueryProvider>
+        <Analytics />
+        <Toaster />
       </body>
     </html>
   );

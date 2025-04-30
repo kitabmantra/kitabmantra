@@ -1,8 +1,6 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
-
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Google({
@@ -77,7 +75,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     // },
 
     async jwt({token, user, profile, account}){
-      console.log("this is token : ",token,user,account)
       if(user && account && profile){
         token.id = profile?.sub;
         token.email = user.email;

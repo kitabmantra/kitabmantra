@@ -1,18 +1,14 @@
+/*eslint-disable*/
 "use server"
 
 import { auth } from "@/auth";
-import { getUserModel } from "@/lib/hooks/database/get-user-model";
+import { getUser } from "./getUser";
 
-export const getCurrentUser = async() =>{
+export const getCurrentUser = async () => {
     const session = await auth();
     if (!session) return null;
-    const userModel = await getUserModel();
-    const user = await userModel.findOne({
-        userId : session.user?.id
-    })
-    if (!user) {
-        return null;
-    }
+    const uData = await getUser(session.user?.id!);
+    const user = uData.formattedUserData as User;
     return user;
 
 }

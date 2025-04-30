@@ -20,12 +20,12 @@ export const createUser = async(data : CreateUserProps) =>{
         }
         const userModel = await getUserModel();
         const newUser = await userModel.create({
-            userName,
-            name,
-            email,
-            image,
-            phoneNumber,
-            userId,
+            userName : userName.trim(),
+            name : name.trim(),
+            email : email.trim(),
+            image : image?.trim(),
+            phoneNumber : phoneNumber.trim(),
+            userId : userId.trim(),
         })
         if(!newUser){
             throw new Error("Failed to create user")

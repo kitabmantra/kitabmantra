@@ -1,104 +1,228 @@
 /*eslint-disable*/
 "use client"
+import { Session } from 'next-auth'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import Image from 'next/image'
+import { useUploadThing } from '@/lib/utils/uploadthing-client'
+import toast from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
+import { checkUserName } from '@/lib/actions/user/get/checkUserName'
+import { createUser } from '@/lib/actions/user/post/createUser'
+import { removeMultipleImages } from '@/lib/actions/uploadthing/delete-images'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Session } from "next-auth"
-import toast from "react-hot-toast"
-import { createUser } from "@/lib/actions/user/post/createUser"
+function OnboardingForm({ session }: { session: Session }) {
+  const user = session?.user
+  const [files, setFiles] = useState<File[]>([])
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [name, setName] = useState<string>(session?.user?.name || '')
+  const [userName, setUserName] = useState<string>('')
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
-export default function OnboardingForm({sessionData} : {sessionData : Session}) {
-  const router = useRouter()
-  const [username, setUsername] = useState("")
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setIsLoading(true)
-    setError(null)
+  const { startUpload } = useUploadThing("imageUploader")
 
-    try {
-      const response = await createUser({userName : username, phoneNumber, email : sessionData.user?.email!, name : sessionData.user?.name!, userId : sessionData.user?.id!, image  :sessionData.user?.image || "" })
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click()
+  }
 
-      if(response.success && response.message){
-        toast.success(response.message)
-        router.push("/dashboard")
-      }else if(response.error){
-        toast.error(response.error as string)
-      }
-     
-    } catch (error) {
-      setError("An unexpected error occurred")
-      console.error("Error:", error)
-      toast.error(error as string || "something went wrong")
-    } finally {
-      setIsLoading(false)
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files
+    if (!selectedFiles || selectedFiles.length === 0) return
+
+    const file = selectedFiles[0]
+    setFiles([file])
+
+    const previewUrl = URL.createObjectURL(file)
+    setPreviewImage(previewUrl)
+
+    return () => {
+      URL.revokeObjectURL(previewUrl)
     }
   }
 
+
+  const handleCreateUser = useCallback(
+    async () => {
+      if (!session?.user) return;
+      setIsLoading(true)
+      try {
+        const userData = {
+          userId: user?.id!,
+          name: name!,
+          email: user?.email!,
+          userName: userName!,
+          phoneNumber,
+          image: user?.image || undefined,
+        }
+        console.log("this is userData : ", userData)
+        const userNameValid = await checkUserName(userName.trim())
+        if (!userNameValid) {
+          toast.error("Username is already used")
+          return;
+        }
+        if (files.length > 0) {
+          const result = await startUpload(files)
+          if (result && result[0]?.ufsUrl) {
+            userData.image = result[0].ufsUrl;
+            setImageUrl(result[0].ufsUrl)
+          }
+        }
+
+        const response = await createUser(userData)
+        if (response.success && response.message) {
+          toast.success(response.message)
+          router.push("/dashboard")
+        } else if (response.error) {
+          throw new Error(response.error as string)
+        }
+      } catch (error) {
+        console.error("Error creating user:", error)
+        if (imageUrl) {
+          await removeMultipleImages([imageUrl])
+        }
+        toast.error(error instanceof Error ? error.message : "An unknown error occurred")
+      } finally {
+        setIsLoading(false)
+        setPreviewImage(null)
+        setFiles([])
+        setImageUrl(null)
+      }
+    }
+
+    , [user, name, userName, files, imageUrl, startUpload, router])
+  const getInitials = () => {
+    if (!user?.name) return 'U'
+    const names = user.name.split(' ')
+    return names.map(name => name[0].toUpperCase()).join('')
+  }
+
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      if (imageUrl) {
+        await removeMultipleImages([imageUrl]);
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [imageUrl]);
+
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">
-          Complete Your Profile
-        </CardTitle>
-        <CardDescription className="text-center">
-          Please provide some additional information to complete your profile
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="grid gap-4">
-          {error && (
-            <div className="text-sm text-red-500 text-center">
-              {error}
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+      <Card className="w-full max-w-md bg-white">
+        <CardHeader className="flex flex-col items-center">
+          <div className="relative mb-4">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              accept="image/*"
+              className="hidden"
+            />
+            <div
+              className="w-24 h-24 rounded-full border-4 border-gray-300 cursor-pointer hover:border-gray-400 transition-colors overflow-hidden flex items-center justify-center bg-gray-200"
+              onClick={handleAvatarClick}
+            >
+              {previewImage ? (
+                <Image
+                  src={previewImage}
+                  alt="Profile preview"
+                  className="w-full h-full object-cover"
+                  width={96}
+                  height={96}
+                  priority
+                />
+              ) : user?.image ? (
+                <Image
+                  src={user.image}
+                  alt="Profile picture"
+                  className="w-full h-full object-cover"
+                  width={96}
+                  height={96}
+                />
+              ) : (
+                <span className="text-2xl font-bold text-gray-700">
+                  {getInitials()}
+                </span>
+              )}
             </div>
-          )}
-          <div className="grid gap-2">
-            <Label htmlFor="username">Username</Label>
+          </div>
+          <h2 className="text-xl font-bold text-gray-800">Complete Your Profile</h2>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-gray-700">
+              Full Name
+            </Label>
             <Input
-              id="username"
-              type="text"
-              placeholder="Choose a username"
-              value={username}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+              id="name"
+              defaultValue={user?.name || ''}
+              className="border-gray-300 focus:border-gray-500"
               required
+              minLength={3}
+              maxLength={30}
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="phone">Phone Number</Label>
+
+          <div className="space-y-2">
+            <Label htmlFor="username" className="text-gray-700">
+              Username
+            </Label>
+            <Input
+              id="username"
+              className="border-gray-300 focus:border-gray-500"
+              required
+              minLength={3}
+              placeholder='Enter your username'
+              maxLength={30}
+              onChange={(e) => setUserName(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="bio" className="text-gray-700">
+              Phone Number
+            </Label>
             <Input
               id="phone"
-              type="tel"
+              type="tel" // or "number" if you prefer mobile number keyboards
+              pattern="[0-9]*" // Ensures only numbers are allowed
               placeholder="Enter your phone number"
-              value={phoneNumber}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhoneNumber(e.target.value)}
+              minLength={10}
+              maxLength={20}
               required
+              value={phoneNumber}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, '');
+                setPhoneNumber(value);
+              }}
             />
           </div>
         </CardContent>
+
         <CardFooter>
           <Button
-            className="w-full"
-            type="submit"
-            disabled={isLoading}
+            onClick={handleCreateUser}
+            className="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium"
+            disabled={isLoading || !name || !userName}
           >
-            {isLoading ? "Creating account..." : "Complete Profile"}
+            {isLoading ? "Creating..." : "Complete Profile"}
           </Button>
         </CardFooter>
-      </form>
-    </Card>
+      </Card>
+    </div>
   )
-} 
+}
+
+export default OnboardingForm
