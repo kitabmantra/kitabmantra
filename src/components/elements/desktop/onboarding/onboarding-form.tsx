@@ -1,7 +1,7 @@
 /*eslint-disable*/
 "use client"
 import { Session } from 'next-auth'
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -49,7 +49,7 @@ function OnboardingForm({ session }: { session: Session }) {
   }
 
 
-  const handleCreateUser = useCallback(
+  const handleCreateUser = 
     async () => {
       if (!session?.user) return;
       setIsLoading(true)
@@ -97,7 +97,6 @@ function OnboardingForm({ session }: { session: Session }) {
       }
     }
 
-    , [user, name, userName, files, imageUrl, startUpload, router])
   const getInitials = () => {
     if (!user?.name) return 'U'
     const names = user.name.split(' ')
