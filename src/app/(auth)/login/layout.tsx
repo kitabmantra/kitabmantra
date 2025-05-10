@@ -7,5 +7,4 @@ const LoginLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
     )
 }
-
 export default LoginLayout
