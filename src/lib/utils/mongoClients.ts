@@ -94,7 +94,6 @@ export const getMongoClient = async (key: "users" | "books") => {
 
 
 
-/*eslint-disable*/
 // "use server"
 // import mongoose, { Connection } from "mongoose";
 // import { MongoClient } from "mongodb";
