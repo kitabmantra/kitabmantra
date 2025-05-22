@@ -1,7 +1,12 @@
 import LandingPage from "@/components/elements/desktop/landing/LandingPage";
+import { getHitCounter } from "@/lib/actions/hitcount/get/getHitCounter";
 
-export default function Home() {
+const Home = async () => {
+  const { success, hitcount } = await getHitCounter()
+
   return (
-    <LandingPage />
+    <LandingPage count={hitcount.count} success={success} />
   );
 }
+
+export default Home

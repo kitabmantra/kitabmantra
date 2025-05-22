@@ -1,10 +1,16 @@
+import MyListings from '@/components/elements/desktop/application/MyListings'
+import { getBooksByUser } from '@/lib/actions/books/get/getBooksByUser'
+import { getCurrentUser } from '@/lib/actions/user/get/getCurrentUser'
+import { redirect } from 'next/navigation'
 import React from 'react'
 
-const Page = () => {
+const Page = async () => {
+    const user = await getCurrentUser()
+    if (!user) redirect("/login")
+    const response = await getBooksByUser()
+    const listedBooks = response.formattedBooks as Book[]
     return (
-        <div>
-            Under construction...
-        </div>
+        <MyListings success={response.success} listedBooks={listedBooks} />
     )
 }
 

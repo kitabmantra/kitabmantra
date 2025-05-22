@@ -1,16 +1,15 @@
 "use server"
 
 import { getBookModel } from "@/lib/hooks/database/get-book-model"
-import { getCurrentUser } from "../../user/get/getCurrentUser";
 
-export const getBooksByUser = async () => {
-    const user = await getCurrentUser()
-    if (!user) return { success: false }
+export const getAllBooks = async () => {
     const bookModel = await getBookModel();
 
-    const books = await bookModel.find({ userId: user.userId })
+    const books = await bookModel.find()
     if (!books) return { success: false }
-    const formattedBooks: Book[] = books.map((book) => ({
+    
+    const formattedBooks: PublicBook[] = books.map(book => ({
+        userId: book.userId,
         bookId: book._id.toString(),
         title: book.title,
         author: book.author,
@@ -21,7 +20,7 @@ export const getBooksByUser = async () => {
         category: book.category,
         type: book.type,
         location: book.location,
-        createdAt: book.createdAt,
+        createdAt: book.createdAt.toISOString().slice(0, 10),
     }))
     return { success: true, formattedBooks }
 

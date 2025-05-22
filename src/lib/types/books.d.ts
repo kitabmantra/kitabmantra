@@ -1,6 +1,20 @@
 declare type Book = {
     bookId: string;
+    title: string;
+    author: string;
+    description: string;
+    price: number;
+    condition: BookCondition
+    imageUrl: string[];
+    category: string;
+    type: BookType;
+    location: string;
+    createdAt: string;
+}
+
+declare type PublicBook = {
     userId: string;
+    bookId: string;
     title: string;
     author: string;
     description: string;

@@ -1,0 +1,9 @@
+checklist: 
+book listing
+buyers and sellers
+hit counter
+filters
+calendar
+pwa
+fully responsive
+location features

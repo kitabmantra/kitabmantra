@@ -20,6 +20,7 @@ import {
   FormMessage
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
@@ -44,7 +45,7 @@ import {
   Upload
 } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import React, { useState } from "react"
 import { useForm } from "react-hook-form"
 import toast from "react-hot-toast"
 import { z } from "zod"
@@ -76,6 +77,38 @@ export default function PostBookPage({
     },
   })
 
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault()
+    setLocation(e.target.value)
+  }
+  const handleAutoLocation = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+
+    if (!navigator.geolocation) {
+      console.error("Geolocation is not supported by your browser.")
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const latitude = position.coords.latitude.toFixed(6)
+        const longitude = position.coords.longitude.toFixed(6)
+        const accuracy = position.coords.accuracy // in meters
+        setLocation(`Lat: ${latitude}, Lon: ${longitude}`)
+      },
+      (error) => {
+        console.error("Error getting location:", error)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    )
+  }
+
+
+
   const watchLevel = form.watch("category.level")
 
   async function onSubmit(values: z.infer<typeof BookFormValidation>) {
@@ -92,8 +125,11 @@ export default function PostBookPage({
       location: JSON.stringify(location),
     }
     console.log(bookData)
-    await createBook({ bookData })
-    toast.success("Book Listed successfully!..")
+    const response = await createBook({ bookData })
+    if (response?.success) {
+      form.reset()
+      toast.success("Book Listed successfully!..")
+    }
   }
 
   const getLevelName = (level: string) => {
@@ -278,6 +314,19 @@ export default function PostBookPage({
                       </FormItem>
                     )}
                   />
+                  <div>
+                    <Label className="text-slate-700 mb-1">Location</Label>
+                    <Input
+                      type="text"
+                      placeholder="Enter location manually..."
+                      onChange={handleLocationChange}
+                    />
+                  </div>
+                  <div>
+                    <Button onClick={handleAutoLocation}>
+                      Get Current Location
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="bg-slate-50 p-6 rounded-lg border border-slate-200">

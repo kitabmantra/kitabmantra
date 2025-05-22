@@ -4,6 +4,7 @@ import mongoose, { Connection } from "mongoose";
 import { MongoClient } from "mongodb";
 import { User } from "@/lib/models/user.model";
 import { Book } from "@/lib/models/book.model";
+import { HitCount } from "../models/hitcount.model";
 
 const uris = {
     users: process.env.MONGODBUSER!,
@@ -35,6 +36,7 @@ export const getMongoClient = async (key: "users" | "books") => {
         const conn = await mongoose.createConnection(uri).asPromise();
         if (key === "users") {
             conn.model("User", User.schema);
+            conn.model("HitCount", HitCount.schema)
         } else if (key === "books") {
             conn.model("Book", Book.schema);
         }

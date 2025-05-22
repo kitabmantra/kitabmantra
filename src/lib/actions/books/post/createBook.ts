@@ -4,15 +4,20 @@ import { getBookModel } from "@/lib/hooks/database/get-book-model";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "../../user/get/getCurrentUser";
 
+interface CreateBookResponse {
+    success: boolean
+    message?: string
+}
+
 interface CreateBookProps {
     bookData: CreateBook;
 }
 export const createBook = async ({
     bookData
-}: CreateBookProps) => {
+}: CreateBookProps): Promise<CreateBookResponse> => {
     const BookModel = await getBookModel();
     const user = await getCurrentUser()
-   
+
     if (user?.userId) {
         try {
             const createdBook = await BookModel.create({
@@ -27,15 +32,18 @@ export const createBook = async ({
                 type: bookData.type,
                 location: bookData.location,
             })
-            if (!createdBook) return { status: 500, message: "internal server error" }
+            if (!createdBook) return { success: false, message: "Failed to create book" }
+
             revalidatePath("/dashboard")
-            revalidatePath("/dahboard/my-listings")
+            revalidatePath("/dashboard/my-listings")
+            return { success: true }
+
         } catch (error) {
             console.log("something went wrong: ", error);
-            return error;
+            return { success: false }
         }
     } else {
-        return { message: "User not recognized!" }
+        return { success: false, message: "User not recognized!"}
     }
 
 }
