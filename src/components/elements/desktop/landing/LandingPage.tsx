@@ -1,76 +1,14 @@
-import Link from "next/link"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-    BookOpen,
-    Menu,
-    Search,
-    ShoppingCart,
-    User,
-} from "lucide-react"
-import Footer from "./Footer"
+import Image from "next/image"
+import Link from "next/link"
 import toast from "react-hot-toast"
+import Footer from "./Footer"
 
-export default function LandingPage({count, success}: {count: number, success: boolean}) {
-    if(!success) toast.error("Something went wrong!")
+export default function LandingPage({ count, success }: { count: number, success: boolean }) {
+    if (!success) toast.error("Something went wrong!")
     return (
         <div className="flex min-h-[100dvh] flex-col bg-[#fcf9f2]">
-            {/* Header */}
-            <header className="sticky top-0 z-50 w-full border-b bg-[#fcf9f2]/80 backdrop-blur-sm">
-                <div className="container flex h-16 items-center justify-between px-4 md:px-6">
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" className="md:hidden">
-                            <Menu className="h-5 w-5" />
-                            <span className="sr-only">Toggle menu</span>
-                        </Button>
-                        <Link href="/" className="flex items-center gap-2">
-                            <BookOpen className="h-6 w-6 text-amber-700" />
-                            <span className="text-xl font-bold">Kitab Mantra</span>
-                        </Link>
-                    </div>
-                    <nav className="hidden gap-6 md:flex">
-                        <Link href="#" className="text-sm font-medium hover:underline underline-offset-4">
-                            Home
-                        </Link>
-                        <Link href="#books" className="text-sm font-medium hover:underline underline-offset-4">
-                            Books
-                        </Link>
-                        <Link href="#categories" className="text-sm font-medium hover:underline underline-offset-4">
-                            Categories
-                        </Link>
-                        <Link href="#about" className="text-sm font-medium hover:underline underline-offset-4">
-                            About
-                        </Link>
-                        <Link href="#contact" className="text-sm font-medium hover:underline underline-offset-4">
-                            Contact
-                        </Link>
-                    </nav>
-                    <div className="flex items-center gap-4">
-                        <form className="hidden items-center lg:flex">
-                            <div className="relative">
-                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    type="search"
-                                    placeholder="Search books..."
-                                    className="w-60 rounded-full bg-white pl-8 md:w-80"
-                                />
-                            </div>
-                        </form>
-                        <Button variant="ghost" size="icon" className="text-amber-700">
-                            <Link href="/login">
-                                <User className="h-5 w-5" />
-                            </Link>
-                            <span className="sr-only">Account</span>
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-amber-700">
-                            <ShoppingCart className="h-5 w-5" />
-                            <span className="sr-only">Cart</span>
-                        </Button>
-                    </div>
-                </div>
-            </header>
-
             <main className="flex-1">
                 {/* Hero Section */}
                 <section className="relative">
@@ -103,7 +41,7 @@ export default function LandingPage({count, success}: {count: number, success: b
                             </div>
                             <div className="flex items-center justify-center">
                                 <Image
-                                    src="/placeholder.svg?height=400&width=600"
+                                    src="/kitabmantra.png"
                                     width={600}
                                     height={400}
                                     alt="Bookstore interior with shelves of books"
@@ -232,7 +170,7 @@ export default function LandingPage({count, success}: {count: number, success: b
                         <div className="grid gap-6 lg:grid-cols-2 lg:gap-12">
                             <div className="flex items-center justify-center">
                                 <Image
-                                    src="/placeholder.svg?height=400&width=600"
+                                    src="/kitabmantra.png"
                                     width={600}
                                     height={400}
                                     alt="Bookstore staff arranging books"
@@ -394,7 +332,7 @@ export default function LandingPage({count, success}: {count: number, success: b
                     </div>
                 </section> */}
             </main>
-            <Footer count={count}/>
+            <Footer count={count} />
         </div>
     )
 }

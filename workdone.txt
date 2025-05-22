@@ -1,9 +1,30 @@
 checklist: 
-book listing
+book listing                    done
 buyers and sellers
-hit counter
+hit counter                     done
 filters
 calendar
-pwa
+pwa                              done
 fully responsive
-location features
+location features                done
+
+
+
+
+bugs: 
+when selecting two or more fields in book category it records it all.
+for eg: class1 masters it 1st year
+
+
+adjustments to make: 
+1). make the location state as if user selects manual location 
+    input will be opened 
+    when selected auto it will take the browsers location or device location
+
+2. Better UI.
+
+3. Reduce page loads.
+
+4. Buyer and sellers Workthrough.
+
+5. Add book impressions for user dashboard analytics
