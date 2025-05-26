@@ -1,4 +1,4 @@
-import MyListings from '@/components/elements/desktop/application/MyListings'
+import MyListings from '@/components/elements/desktop/application/my-listings/MyListings'
 import { getBooksByUser } from '@/lib/actions/books/get/getBooksByUser'
 import { getCurrentUser } from '@/lib/actions/user/get/getCurrentUser'
 import { redirect } from 'next/navigation'
@@ -13,5 +13,4 @@ const Page = async () => {
         <MyListings success={response.success} listedBooks={listedBooks} />
     )
 }
-
 export default Page

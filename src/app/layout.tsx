@@ -17,8 +17,32 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kitab Mantra",
+  title: {
+    default: "Kitab Mantra",
+    template: "%s - Kitab Mantra"
+  },
   description: "Your contribution to a better future!",
+  keywords: [
+    "Kitab Mantra",
+    "Book Exchange platform nepal.",
+    "Book buying in nepal.",
+  ],
+  authors: [{ name: "Kitab Mantra" }],
+  openGraph: {
+    title: "Kitab Mantra",
+    description: "Your contribution to a better future!",
+    url: "https://kitabmantra.vercel.app/",
+    siteName: "Kitab Mantra",
+    images: [
+      {
+        url: "./opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Kitab Mantra",
+      },
+    ],
+    type: "website",
+  },
   manifest: "/manifest.json",
 };
 

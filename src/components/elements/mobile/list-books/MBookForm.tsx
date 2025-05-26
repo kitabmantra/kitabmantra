@@ -50,13 +50,12 @@ import { useForm } from "react-hook-form"
 import toast from "react-hot-toast"
 import { z } from "zod"
 
-interface PostBookPageProps {
+interface MBookForm {
   userId: string
 }
-
-export default function PostBookPage({
+const MBookForm = ({
   userId
-}: PostBookPageProps) {
+}: MBookForm) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [images, setImages] = useState<[]>([]);
   const [location, setLocation] = useState("");
@@ -93,11 +92,11 @@ export default function PostBookPage({
       (position) => {
         const latitude = position.coords.latitude.toFixed(6)
         const longitude = position.coords.longitude.toFixed(6)
-        const accuracy = position.coords.accuracy // in meters
         setLocation(`Lat: ${latitude}, Lon: ${longitude}`)
       },
       (error) => {
         console.error("Error getting location:", error)
+        toast.error("Error getting location. Try enabling location for this site")
       },
       {
         enableHighAccuracy: true,
@@ -106,9 +105,6 @@ export default function PostBookPage({
       }
     )
   }
-
-
-
   const watchLevel = form.watch("category.level")
 
   async function onSubmit(values: z.infer<typeof BookFormValidation>) {
@@ -146,7 +142,7 @@ export default function PostBookPage({
   return (
     <div className="p-4 w-full bg-gradient-to-b from-slate-50 to-white min-h-screen flex justify-start items-start">
       <ScrollArea className="h-[calc(100vh-5rem)] w-full">
-        <Link href="/dashboard/my-listings" className="inline-flex fixed items-center text-slate-600 hover:text-slate-900 mb-6 transition-colors">
+        <Link href="/dashboard/my-listings" className="inline-flex sticky left-0 items-center text-slate-600 hover:text-slate-900 mb-6 transition-colors bg-slate-100">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to books
         </Link>
@@ -622,3 +618,5 @@ export default function PostBookPage({
     </div>
   )
 }
+
+export default MBookForm

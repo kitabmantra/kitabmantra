@@ -1,123 +1,19 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import {
-    BarChart2,
-    BookOpen,
-    ChevronLeft,
-    ChevronRight,
-    LayoutDashboard,
-    ListChecks,
-    MessageCircle,
-    MessageSquare
-} from "lucide-react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import type React from "react"
-import { useState } from "react"
-
-type NavItem = {
-    title: string
-    href: string
-    icon: React.ElementType
-}
-
-const navItems: NavItem[] = [
-    {
-        title: "Dashboard",
-        href: "/dashboard",
-        icon: LayoutDashboard,
-    },
-    {
-        title: "List Book",
-        href: "/dashboard/list-book",
-        icon: BookOpen,
-    },
-    {
-        title: "My Listings",
-        href: "/dashboard/my-listings",
-        icon: ListChecks,
-    },
-    {
-        title: "Chats",
-        href: "/dashboard/chats",
-        icon: MessageSquare,
-    },
-    {
-        title: "Comments",
-        href: "/dashboard/comments",
-        icon: MessageCircle,
-    },
-    {
-        title: "Analytics",
-        href: "/dashboard/analytics",
-        icon: BarChart2,
-    },
-]
+import { MSidebar } from "./MSidebar"
+import { DSidebar } from "./DSidebar"
+import { useMediaQuery } from "@/lib/hooks/responsive/useMediaQuery";
 
 interface SidebarProps {
     user: User;
 }
-export function Sidebar({
+export default function Sidebar({
     user
 }: SidebarProps) {
-    const pathname = usePathname()
-    const [collapsed, setCollapsed] = useState(false)
+    const isDesktop = useMediaQuery("(min-width: 640px)")
+    if (isDesktop === null) {
+        return null
+    }
 
-    return (
-        <>
-            <aside
-                className={cn(
-                    "flex h-[calc(100vh-2rem)] w-64 flex-col border-r bg-background transition-all duration-300 ease-in-out",
-                    collapsed ? "w-16" : "w-64",
-                )}
-            >
-                <div className="flex h-16 items-center justify-between border-b px-4">
-                    <h2 className={cn("text-lg font-semibold", collapsed && "hidden")}>BookApp</h2>
-                    <Button variant="ghost" size="icon" className="hidden md:flex" onClick={() => setCollapsed(!collapsed)}>
-                        {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-                        <span className="sr-only">{collapsed ? "Expand sidebar" : "Collapse sidebar"}</span>
-                    </Button>
-                </div>
-
-                <nav className="flex-1 overflow-y-auto p-2">
-                    <ul className="space-y-1">
-                        {navItems.map((item) => {
-                            const isActive = pathname === item.href
-
-                            return (
-                                <li key={item.href}>
-                                    <Link
-                                        href={item.href}
-                                        className={cn(
-                                            "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                                            isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground",
-                                            collapsed && "justify-center px-0",
-                                        )}
-                                    >
-                                        <item.icon className={cn("h-5 w-5", !collapsed && "mr-3")} />
-                                        {!collapsed && <span>{item.title}</span>}
-                                        {collapsed && <span className="sr-only">{item.title}</span>}
-                                    </Link>
-                                </li>
-                            )
-                        })}
-                    </ul>
-                </nav>
-
-                <div className="border-t p-4">
-                    <div className={cn("flex items-center", collapsed && "justify-center")}>
-                        <div className="h-8 w-8 rounded-full bg-muted" />
-                        {!collapsed && (
-                            <div className="ml-3">
-                                <p className="text-sm font-medium">{user.userName}</p>
-                                <p className="text-xs text-muted-foreground">{user.email}</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </aside>
-        </>
-    )
+    return isDesktop ? <DSidebar user={user} /> : <MSidebar user={user} />
 }

@@ -1,14 +1,16 @@
 checklist: 
-book listing                    done
+book listing                     done
 buyers and sellers
-hit counter                     done
-filters
+hit counter                      done
+filters                          done
 calendar
 pwa                              done
-fully responsive
+responsive layout                done
 location features                done
-
-
+onpage seo                       done
+site-map                         done
+robots.txt                       done
+getStaticParams                  done
 
 
 bugs: 
@@ -17,7 +19,7 @@ for eg: class1 masters it 1st year
 
 
 adjustments to make: 
-1). make the location state as if user selects manual location 
+1. make the location state as if user selects manual location 
     input will be opened 
     when selected auto it will take the browsers location or device location
 

@@ -14,7 +14,7 @@ const Header = () => {
                         <Menu className="h-5 w-5" />
                         <span className="sr-only">Toggle menu</span>
                     </Button>
-                    <Link href="/" className="flex items-start gap-2 w-16 h-16 relative rounded-full border-2">
+                    <Link href="/" className="flex items-start gap-2 w-16 h-16 relative rounded-full">
                         <Logo />
                     </Link>
                     <h1 className="font-medium text-lg">Kitab Mantra</h1>

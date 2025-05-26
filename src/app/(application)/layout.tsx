@@ -1,7 +1,8 @@
-import { Sidebar } from '@/components/elements/desktop/bars/sidebars/Sidebar'
+import Sidebar from '@/components/elements/desktop/bars/sidebars/Sidebar';
 import { getCurrentUser } from '@/lib/actions/user/get/getCurrentUser'
 import { redirect } from 'next/navigation';
 import React from 'react'
+
 
 const ApplicationLayout = async ({
     children
