@@ -65,13 +65,20 @@ export function DSidebar({ user }: DSidebarProps) {
                                                 <Link
                                                     href={item.href}
                                                     className={cn(
-                                                        "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                                                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-300 hover:bg-accent hover:text-accent-foreground",
                                                         isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground",
-                                                        collapsed && "justify-center px-0",
+                                                        collapsed ? "justify-center" : ""
                                                     )}
                                                 >
-                                                    <item.icon className="h-5 w-5" />
-                                                    <span className="sr-only">{item.title}</span>
+                                                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                                                    <span
+                                                        className={cn(
+                                                            "transition-all duration-300 whitespace-nowrap overflow-hidden",
+                                                            collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+                                                        )}
+                                                    >
+                                                        {item.title}
+                                                    </span>
                                                 </Link>
                                             </TooltipTrigger>
                                             <TooltipContent side="right" sideOffset={10}>
