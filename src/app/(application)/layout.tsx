@@ -10,7 +10,7 @@ const ApplicationLayout = async ({
     const user = await getCurrentUser();
     if (!user) redirect("/login")
     return (
-        <div className='flex gap-2'>
+        <div className='flex gap-2 min-w-screen min-h-screen'>
             <Sidebar user={user} />
             {children}
         </div>

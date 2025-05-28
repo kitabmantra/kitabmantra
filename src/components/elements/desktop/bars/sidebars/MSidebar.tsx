@@ -2,7 +2,7 @@
 
 import { navItems } from "@/db/NavItems"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 interface MSidebarProps {
     user: User
@@ -10,14 +10,15 @@ interface MSidebarProps {
 
 export function MSidebar({ user }: MSidebarProps) {
     console.log(user)
-    const pathname = usePathname()
+    const pathname = usePathname();
+    const router = useRouter();
     const [mounted, setMounted] = useState(false)
     const [activeIndex, setActiveIndex] = useState(0)
-  
+
     useEffect(() => {
-      setMounted(true)
-      const currentIndex = navItems.findIndex((item) => item.href === pathname)
-      setActiveIndex(currentIndex >= 0 ? currentIndex : 0)
+        setMounted(true)
+        const currentIndex = navItems.findIndex((item) => item.href === pathname)
+        setActiveIndex(currentIndex >= 0 ? currentIndex : 0)
     }, [pathname])
 
     return (
@@ -28,7 +29,7 @@ export function MSidebar({ user }: MSidebarProps) {
       ${mounted ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}
     `}
         >
-            {/* Floating active indicator */}
+          
             <div
                 className="absolute top-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-300 ease-out"
                 style={{
@@ -42,7 +43,11 @@ export function MSidebar({ user }: MSidebarProps) {
                     {navItems.map((item, index) => {
                         const isActive = pathname === item.href
                         return (
-                            <li key={item.href} className="flex-1">
+                            <li 
+                            key={item.href} 
+                            className="flex-1"
+                            onMouseOver={()=>router.prefetch(`${item.href}`)}
+                            >
                                 <Link
                                     href={item.href}
                                     className={`
@@ -64,7 +69,6 @@ export function MSidebar({ user }: MSidebarProps) {
                   `}
                                     />
 
-                                    {/* Icon with bounce animation */}
                                     <div
                                         className={`
                     relative z-10 transition-all duration-300 ease-out
@@ -79,7 +83,6 @@ export function MSidebar({ user }: MSidebarProps) {
                                         />
                                     </div>
 
-                                    {/* Text with slide animation */}
                                     <span
                                         className={`
                       relative z-10 text-[10px] font-medium truncate max-w-full
@@ -93,7 +96,6 @@ export function MSidebar({ user }: MSidebarProps) {
                                         {item.title}
                                     </span>
 
-                                    {/* Active dot with scale animation */}
                                     <div
                                         className={`
                     w-1 h-1 bg-blue-600 rounded-full mt-1 transition-all duration-300 ease-out
@@ -101,7 +103,6 @@ export function MSidebar({ user }: MSidebarProps) {
                   `}
                                     />
 
-                                    {/* Tap feedback circle */}
                                     <div className="absolute inset-0 rounded-lg bg-blue-200 scale-0 opacity-0 group-active:scale-100 group-active:opacity-30 transition-all duration-150 ease-out" />
                                 </Link>
                             </li>
@@ -110,7 +111,6 @@ export function MSidebar({ user }: MSidebarProps) {
                 </ul>
             </nav>
 
-            {/* Subtle shadow animation */}
             <div className="absolute -top-4 left-0 right-0 h-4 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
         </aside>
     )
