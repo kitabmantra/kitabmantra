@@ -1,5 +1,4 @@
 import { getUserFromSession } from "@/lib/actions/user/get/getUserFromSession";
-import { getUserModel } from "@/lib/hooks/database/get-user-model";
 import { useQuery } from "@tanstack/react-query";
 
 export  const fetchUserFromSession = async( ) =>{
