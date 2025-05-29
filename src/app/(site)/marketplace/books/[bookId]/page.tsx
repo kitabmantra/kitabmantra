@@ -3,8 +3,9 @@ import { getAllBooks } from '@/lib/actions/books/get/getAllBooks'
 import { getOneBook } from '@/lib/actions/books/get/getOneBook'
 import { Metadata } from 'next'
 import React from 'react'
+type Params = Promise<{ bookId: string }>
 
-export const revalidate = 10 // ISR: regenerate page every 5 seconds
+export const revalidate = 10;
 
 export async function generateStaticParams() {
     const { formattedBooks } = await getAllBooks()
@@ -16,8 +17,9 @@ export async function generateStaticParams() {
     );
 }
 
-export async function generateMetadata({ params }: { params: { bookId: string } }): Promise<Metadata> {
-    const { bookId } = params
+export async function generateMetadata(props: { params: Params }): Promise<Metadata> {
+    const params = await props.params
+    const bookId = params.bookId
     const { formattedBook } = await getOneBook({ bookId })
     return {
         title: formattedBook?.title,
@@ -32,8 +34,9 @@ export async function generateMetadata({ params }: { params: { bookId: string } 
     }
 }
 
-const Page = async ({ params }: { params: { bookId: string } }) => {
-    const { bookId } = params
+const Page = async (props: { params: Params }) => {
+    const params = await props.params
+    const bookId = params.bookId
     const { success, formattedBook } = await getOneBook({ bookId })
     return <Book book={formattedBook as PublicBook} success={success} />
 }
