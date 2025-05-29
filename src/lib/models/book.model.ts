@@ -39,6 +39,13 @@ export const bookSchema = new Schema({
     }
 }, { collection: 'books' })
 
+
+bookSchema.index({ title: "text", description: "text", author: "text" });
+bookSchema.index({ price: 1 });
+bookSchema.index({ "location.lat": 1, "location.lon": 1 });
+
+
+
 export const Book = {
     schema: bookSchema,
     model: mongoose.models.Book || mongoose.model("Book", bookSchema)
