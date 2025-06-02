@@ -74,7 +74,7 @@ export function BookCard({ book, success, handleDelete }: BookCardProps) {
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the book listing for "{book.title}".
+                This action cannot be undone. This will permanently delete the book listing for &quot;{book.title}&quot;.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
