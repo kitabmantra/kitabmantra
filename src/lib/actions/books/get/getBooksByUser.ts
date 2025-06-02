@@ -33,7 +33,13 @@ export const getUserBookByQuery = async (options: QueryType) => {
     const { page = 1, limit = 4, search = "", oldestFirst = false } = options;
     
     try {
-        const query: any = {};
+        const currentUser = await getCurrentUser();
+        if(!currentUser){
+            throw new Error()
+        }
+        const query: any = {
+            userId : currentUser.userId
+        };
         
         // Search across multiple fields
         if (search.trim()) {
