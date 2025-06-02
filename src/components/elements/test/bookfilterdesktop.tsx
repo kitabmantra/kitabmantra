@@ -29,7 +29,7 @@ const formSchema = z.object({
 export type FilterFormValues = z.infer<typeof formSchema>
 
 interface BookFilterDesktop {
-  handleReset: () => void;
+  handleReset: () => void
 }
 
 export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
@@ -38,20 +38,23 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
   const [activeFilters, setActiveFilters] = useState<string[]>([]) // Applied filters (from URL)
   const [pendingFilters, setPendingFilters] = useState<string[]>([]) // Current form state filters
   const [openAccordions, setOpenAccordions] = useState<string[]>([""])
-  
+
   // Memoize params to avoid recreating on every render
-  const params = useMemo(() => ({
-    search: searchParams.get("search") || "",
-    minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : 0,
-    maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : 10000,
-    condition: searchParams.get("condition") || "",
-    type: searchParams.get("type") || "",
-    level: searchParams.get("level") || "",
-    faculty: searchParams.get("faculty") || "all",
-    year: searchParams.get("year") || "all",
-    class: searchParams.get("class") || "all",
-    location: searchParams.get("location") || "",
-  }), [searchParams])
+  const params = useMemo(
+    () => ({
+      search: searchParams.get("search") || "",
+      minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : 0,
+      maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : 10000,
+      condition: searchParams.get("condition") || "",
+      type: searchParams.get("type") || "",
+      level: searchParams.get("level") || "",
+      faculty: searchParams.get("faculty") || "all",
+      year: searchParams.get("year") || "all",
+      class: searchParams.get("class") || "all",
+      location: searchParams.get("location") || "",
+    }),
+    [searchParams],
+  )
 
   const form = useForm<FilterFormValues>({
     resolver: zodResolver(formSchema),
@@ -150,12 +153,14 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
 
   const onSubmit = (values: FilterFormValues) => {
     const urlParams = new URLSearchParams()
-    
+
     Object.entries(values).forEach(([key, value]) => {
-      if (value &&
+      if (
+        value &&
         value !== "all" &&
         !(key === "minPrice" && value === 0) &&
-        !(key === "maxPrice" && value === 10000)) {
+        !(key === "maxPrice" && value === 10000)
+      ) {
         urlParams.set(key, String(value))
       }
     })
@@ -197,12 +202,33 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
     form.setValue("class", "all")
 
     if (level) {
-      setOpenAccordions(prev => {
-        const newAccordions = prev.filter(acc => acc !== "education-level")
-        if (getFacultyOptions(level).length > 0) {
-          newAccordions.push("education-faculty")
-        } else if (getClassOptions(level).length > 0) {
+      // Close the level accordion
+      setOpenAccordions((prev) => {
+        const newAccordions = prev.filter((acc) => acc !== "education-level")
+
+        // Open the next accordion in the hierarchy based on level
+        if (level === "school" || level === "highschool") {
           newAccordions.push("education-class")
+        } else if (level === "bachelors" || level === "masters" || level === "exam") {
+          newAccordions.push("education-faculty")
+        }
+        return newAccordions
+      })
+    }
+
+    updatePendingFilters()
+  }
+
+  const handleClassChange = (classValue: string) => {
+    form.setValue("class", classValue)
+
+    if (classValue && classValue !== "all") {
+      setOpenAccordions((prev) => {
+        const newAccordions = prev.filter((acc) => acc !== "education-class")
+
+        // If highschool level is selected, open faculty accordion next
+        if (watchLevel === "highschool") {
+          newAccordions.push("education-faculty")
         }
         return newAccordions
       })
@@ -216,9 +242,11 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
     form.setValue("year", "all")
 
     if (faculty && faculty !== "all") {
-      setOpenAccordions(prev => {
-        const newAccordions = prev.filter(acc => acc !== "education-faculty")
-        if (getYearOptions(watchLevel).length > 0) {
+      setOpenAccordions((prev) => {
+        const newAccordions = prev.filter((acc) => acc !== "education-faculty")
+
+        // Only open year accordion for bachelors and masters
+        if ((watchLevel === "bachelors" || watchLevel === "masters") && getYearOptions(watchLevel).length > 0) {
           newAccordions.push("education-year")
         }
         return newAccordions
@@ -228,28 +256,8 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
     updatePendingFilters()
   }
 
-  const handleClassChange = (classValue: string) => {
-    form.setValue("class", classValue)
-
-    if (classValue && classValue !== "all") {
-      setOpenAccordions(prev => prev.filter(acc => acc !== "education-class"))
-    }
-
-    updatePendingFilters()
-  }
-
-  const handleYearChange = (year: string) => {
-    form.setValue("year", year)
-
-    if (year && year !== "all") {
-      setOpenAccordions(prev => prev.filter(acc => acc !== "education-year"))
-    }
-
-    updatePendingFilters()
-  }
-
   const removePendingFilter = (filterText: string) => {
-    const [type] = filterText.split(": ") // Removed unused 'value' variable
+    const [type] = filterText.split(": ")
 
     // Remove from form values
     switch (type.trim()) {
@@ -273,16 +281,26 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
         form.setValue("faculty", "all")
         form.setValue("year", "all")
         form.setValue("class", "all")
+        // Reset accordion state when level is removed
+        setOpenAccordions((prev) =>
+          prev.filter((acc) => !["education-class", "education-faculty", "education-year"].includes(acc)),
+        )
         break
       case "Faculty":
         form.setValue("faculty", "all")
         form.setValue("year", "all")
+        // Reset year accordion when faculty is removed
+        setOpenAccordions((prev) => prev.filter((acc) => acc !== "education-year"))
         break
       case "Year":
         form.setValue("year", "all")
         break
       case "Class":
         form.setValue("class", "all")
+        // Reset faculty accordion when class is removed for highschool
+        if (watchLevel === "highschool") {
+          setOpenAccordions((prev) => prev.filter((acc) => acc !== "education-faculty"))
+        }
         break
       case "Location":
         form.setValue("location", "")
@@ -311,7 +329,7 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
     if (currentLevel === "highschool") {
       return [
         { value: "science", label: "Science" },
-        { value: "management", label: "Management" }
+        { value: "management", label: "Management" },
       ]
     }
     if (currentLevel === "bachelors" || currentLevel === "masters") {
@@ -319,7 +337,7 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
         { value: "engineering", label: "Engineering" },
         { value: "medical", label: "Medical" },
         { value: "business", label: "Business" },
-        { value: "it", label: "IT" }
+        { value: "it", label: "IT" },
       ]
     }
     if (currentLevel === "exam") {
@@ -327,10 +345,20 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
         { value: "loksewa", label: "Loksewa" },
         { value: "cmat", label: "CMAT" },
         { value: "csit", label: "CSIT" },
-        { value: "ioe", label: "IOE" }
+        { value: "ioe", label: "IOE" },
       ]
     }
     return []
+  }
+   const handleYearChange = (year: string) => {
+    form.setValue("year", year)
+
+    // Close year accordion after selection
+    if (year && year !== "all") {
+      setOpenAccordions(prev => prev.filter(acc => acc !== "education-year"))
+    }
+
+    updatePendingFilters()
   }
 
   const getYearOptions = (level?: string) => {
@@ -359,10 +387,15 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                     <FormControl>
                       <div className="relative">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Search by title or author..." className="pl-9" {...field} onChange={(e) => {
-                          field.onChange(e)
-                          updatePendingFilters()
-                        }} />
+                        <Input
+                          placeholder="Search by title or author..."
+                          className="pl-9"
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e)
+                            updatePendingFilters()
+                          }}
+                        />
                         {field.value && (
                           <Button
                             type="button"
@@ -381,12 +414,7 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
               />
             </div>
 
-            <Accordion
-              type="multiple"
-              className="w-full"
-              value={openAccordions}
-              onValueChange={setOpenAccordions}
-            >
+            <Accordion type="multiple" className="w-full" value={openAccordions} onValueChange={setOpenAccordions}>
               <AccordionItem value="basic-filters">
                 <AccordionTrigger>Basic Filters</AccordionTrigger>
                 <AccordionContent className="space-y-4">
@@ -397,10 +425,14 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                       <FormItem>
                         <FormLabel className="text-xs font-medium">Location</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter location..." {...field} onChange={(e) => {
-                          field.onChange(e)
-                          updatePendingFilters()
-                        }} />
+                          <Input
+                            placeholder="Enter location..."
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e)
+                              updatePendingFilters()
+                            }}
+                          />
                         </FormControl>
                       </FormItem>
                     )}
@@ -613,9 +645,7 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
 
               {watchLevel && getFacultyOptions().length > 0 && (
                 <AccordionItem value="education-faculty">
-                  <AccordionTrigger>
-                    {watchLevel === "exam" ? "Exam Type" : "Faculty"}
-                  </AccordionTrigger>
+                  <AccordionTrigger>{watchLevel === "exam" ? "Exam Type" : "Faculty"}</AccordionTrigger>
                   <AccordionContent className="space-y-4">
                     <FormField
                       control={form.control}
@@ -686,17 +716,10 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
 
             {/* Buttons */}
             <div className="flex justify-between gap-2 mt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={resetFilters}
-              >
+              <Button type="button" variant="outline" onClick={resetFilters}>
                 Reset
               </Button>
-              <Button
-                type="submit"
-                className="bg-slate-800 text-white hover:bg-slate-700"
-              >
+              <Button type="submit" className="bg-slate-800 text-white hover:bg-slate-700">
                 Apply Filters
               </Button>
             </div>
@@ -707,12 +730,14 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                 {/* Pending Filters */}
                 {pendingFilters.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Selected Filters (Click Apply to activate):</p>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">
+                      Selected Filters (Click Apply to activate):
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {pendingFilters.map((filter, index) => (
-                        <Badge 
-                          key={index} 
-                          variant="outline" 
+                        <Badge
+                          key={index}
+                          variant="outline"
                           className="px-2 py-1 cursor-pointer hover:bg-gray-100 transition-colors border-blue-300 text-blue-700"
                           onClick={() => removePendingFilter(filter)}
                         >
@@ -730,9 +755,9 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                     <p className="text-xs font-medium text-muted-foreground mb-2">Applied Filters:</p>
                     <div className="flex flex-wrap gap-2">
                       {activeFilters.map((filter, index) => (
-                        <Badge 
-                          key={index} 
-                          variant="secondary" 
+                        <Badge
+                          key={index}
+                          variant="secondary"
                           className="px-2 py-1 bg-green-100 text-green-800 border-green-300"
                         >
                           {filter}
