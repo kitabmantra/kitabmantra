@@ -116,9 +116,9 @@ const MBookForm = ({
       price: values.price,
       condition: values.condition,
       imageUrl: images,
-      category: JSON.stringify(values.category),
+      category: values.category,
       type: values.type,
-      location: JSON.stringify(location),
+      location: location,
     }
     console.log(bookData)
     const response = await createBook({ bookData })

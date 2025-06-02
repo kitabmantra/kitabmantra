@@ -9,33 +9,21 @@ import toast from 'react-hot-toast'
 import { formatDistanceToNow } from "date-fns"
 
 interface BookProps {
-    book: PublicBook
+    book: string | undefined
     success: boolean
 }
 
 const Book = ({
-    book,
+    book : bookString,
     success
 }: BookProps) => {
     if (!success) toast.error("Something went wrong!")
-    const bookCategories = JSON.parse(book.category)
-    let lat: number | null = null;
-    let lon: number | null = null;
+    const book: PublicBook = JSON.parse(bookString as string);
+    const bookCategories = book.category
+    const lat: number | null = book.location.lat;
+    const lon: number | null = book.location.lon;
 
-    try {
-        const locationString = JSON.parse(book.location);
-
-        if (typeof locationString === "string" && locationString.includes("Lat") && locationString.includes("Lon")) {
-            const [latPart, lonPart] = locationString.split(",");
-            lat = parseFloat(latPart.split(":")[1].trim());
-            lon = parseFloat(lonPart.split(":")[1].trim());
-
-            console.log("Latitude:", lat);
-            console.log("Longitude:", lon);
-        }
-    } catch (e) {
-        console.error("Failed to parse book.location or category", e);
-    }
+  
 
     return (
         <div className="container mx-auto py-8 px-4">
@@ -99,21 +87,22 @@ const Book = ({
                         <div className="mt-6">
                             <h3 className="text-lg font-semibold mb-2">Location</h3>
                             {
-                                lat && lon ? (
+                                lat && lon && (
                                     <div>View location</div>
-                                ) : (
-                                    <p className="text-muted-foreground whitespace-pre-line">
-                                        {(() => {
-                                            try {
-                                                const parsedLocation = JSON.parse(book.location);
-                                                return parsedLocation?.trim() ? parsedLocation : "Not provided";
-                                            } catch (e) {
-                                                alert(e)
-                                                return "Not provided";
-                                            }
-                                        })()}
-                                    </p>
-                                )
+                                ) 
+                                // : (
+                                //     <p className="text-muted-foreground whitespace-pre-line">
+                                //         {(() => {
+                                //             try {
+                                //                 const parsedLocation = JSON.parse(book.location);
+                                //                 return parsedLocation?.trim() ? parsedLocation : "Not provided";
+                                //             } catch (e) {
+                                //                 alert(e)
+                                //                 return "Not provided";
+                                //             }
+                                //         })()}
+                                //     </p>
+                                // )
                             }
                         </div>
                     </div>

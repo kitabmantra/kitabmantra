@@ -22,6 +22,6 @@ export const getAllBooks = async () => {
         location: book.location,
         createdAt: book.createdAt.toISOString().slice(0, 10),
     }))
-    return { success: true, formattedBooks: formattedBooks }
+    return { success: true, formattedBooks }
 
 }

@@ -1,5 +1,4 @@
 "use client"
-
 import {
     Accordion,
     AccordionContent,
@@ -19,7 +18,7 @@ import {
     SelectTrigger,
     SelectValue
 } from "@/components/ui/select"
-import { useState } from "react"
+import { useCallback, useState } from "react"
 
 interface CategoryFilterProps {
     onFilterChange: (filters: {
@@ -29,22 +28,46 @@ interface CategoryFilterProps {
         classNum: string;
     }) => void;
 }
+
 export function CategoryFilter({ onFilterChange }: CategoryFilterProps) {
     const [level, setLevel] = useState("")
     const [faculty, setFaculty] = useState("")
     const [year, setYear] = useState("")
     const [classNum, setClassNum] = useState("")
-    const handleApplyFilters = () => {
-        onFilterChange({ level, faculty, year, classNum })
-    }
 
-    const handleClearFilters = () => {
+    const handleLevelChange = useCallback((val: string) => {
+        setLevel(val)
+        if (val !== level) {
+            setFaculty("")
+            setYear("")
+            setClassNum("")
+        }
+    }, [level])
+
+    const handleFacultyChange = useCallback((val: string) => {
+        setFaculty(val)
+    }, [])
+
+    const handleYearChange = useCallback((val: string) => {
+        setYear(val)
+    }, [])
+
+    const handleClassNumChange = useCallback((val: string) => {
+        setClassNum(val)
+    }, [])
+
+    const handleApplyFilters = useCallback(() => {
+        onFilterChange({ level, faculty, year, classNum })
+    }, [level, faculty, year, classNum, onFilterChange])
+
+    const handleClearFilters = useCallback(() => {
         setLevel("")
         setFaculty("")
         setYear("")
         setClassNum("")
         onFilterChange({ level: "", faculty: "", year: "", classNum: "" })
-    }
+    }, [onFilterChange])
+
     return (
         <div className="bg-white p-4 rounded-lg border sticky top-20">
             <h2 className="font-semibold text-lg mb-4">Filter Books</h2>
@@ -53,31 +76,14 @@ export function CategoryFilter({ onFilterChange }: CategoryFilterProps) {
                 <AccordionItem value="level">
                     <AccordionTrigger>Education Level</AccordionTrigger>
                     <AccordionContent>
-                        <RadioGroup
-                            value={level}
-                            onValueChange={(val) => setLevel(val)}
-                        >
+                        <RadioGroup value={level} onValueChange={handleLevelChange}>
                             <div className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="school" id="school" />
-                                    <Label htmlFor="school">School (1-10)</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="highschool" id="highschool" />
-                                    <Label htmlFor="highschool">High School (11-12)</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="bachelors" id="bachelors" />
-                                    <Label htmlFor="bachelors">Bachelor&apos;s</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="masters" id="masters" />
-                                    <Label htmlFor="masters">Master&apos;s</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="exam" id="exam" />
-                                    <Label htmlFor="exam">Exam Preparation</Label>
-                                </div>
+                                {["school","highschool","bachelors","masters","exam"].map(lvl => (
+                                    <div className="flex items-center space-x-2" key={lvl}>
+                                        <RadioGroupItem value={lvl} id={lvl} />
+                                        <Label htmlFor={lvl}>{lvl.charAt(0).toUpperCase() + lvl.slice(1)}</Label>
+                                    </div>
+                                ))}
                             </div>
                         </RadioGroup>
                     </AccordionContent>
@@ -87,7 +93,7 @@ export function CategoryFilter({ onFilterChange }: CategoryFilterProps) {
                     <AccordionItem value="class">
                         <AccordionTrigger>Class</AccordionTrigger>
                         <AccordionContent>
-                            <Select value={classNum} onValueChange={setClassNum}>
+                            <Select value={classNum} onValueChange={handleClassNumChange}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select class" />
                                 </SelectTrigger>
@@ -108,7 +114,7 @@ export function CategoryFilter({ onFilterChange }: CategoryFilterProps) {
                         <AccordionItem value="class">
                             <AccordionTrigger>Class</AccordionTrigger>
                             <AccordionContent>
-                                <Select value={classNum} onValueChange={setClassNum}>
+                                <Select value={classNum} onValueChange={handleClassNumChange}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select class" />
                                     </SelectTrigger>
@@ -123,47 +129,31 @@ export function CategoryFilter({ onFilterChange }: CategoryFilterProps) {
                         <AccordionItem value="faculty">
                             <AccordionTrigger>Faculty</AccordionTrigger>
                             <AccordionContent>
-                                <RadioGroup value={faculty} onValueChange={setFaculty}>
-                                    <div className="space-y-2">
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="science" id="science" />
-                                            <Label htmlFor="science">Science</Label>
+                                <RadioGroup value={faculty} onValueChange={handleFacultyChange}>
+                                    {["science","management"].map(f => (
+                                        <div className="flex items-center space-x-2" key={f}>
+                                            <RadioGroupItem value={f} id={f} />
+                                            <Label htmlFor={f}>{f.charAt(0).toUpperCase() + f.slice(1)}</Label>
                                         </div>
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="management" id="management" />
-                                            <Label htmlFor="management">Management</Label>
-                                        </div>
-                                    </div>
+                                    ))}
                                 </RadioGroup>
                             </AccordionContent>
                         </AccordionItem>
                     </>
                 )}
 
-                {level === "bachelors" && (
+                {(level === "bachelors" || level === "masters") && (
                     <>
                         <AccordionItem value="faculty">
                             <AccordionTrigger>Faculty</AccordionTrigger>
                             <AccordionContent>
-                                <RadioGroup value={faculty} onValueChange={setFaculty}>
-                                    <div className="space-y-2">
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="engineering" id="engineering" />
-                                            <Label htmlFor="engineering">Engineering</Label>
+                                <RadioGroup value={faculty} onValueChange={handleFacultyChange}>
+                                    {["engineering","medical","business","it"].map(f => (
+                                        <div className="flex items-center space-x-2" key={f}>
+                                            <RadioGroupItem value={f} id={`${f}-${level}`} />
+                                            <Label htmlFor={`${f}-${level}`}>{f.charAt(0).toUpperCase() + f.slice(1)}</Label>
                                         </div>
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="medical" id="medical" />
-                                            <Label htmlFor="medical">Medical</Label>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="business" id="business" />
-                                            <Label htmlFor="business">Business</Label>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="it" id="it" />
-                                            <Label htmlFor="it">IT</Label>
-                                        </div>
-                                    </div>
+                                    ))}
                                 </RadioGroup>
                             </AccordionContent>
                         </AccordionItem>
@@ -171,60 +161,14 @@ export function CategoryFilter({ onFilterChange }: CategoryFilterProps) {
                         <AccordionItem value="year">
                             <AccordionTrigger>Year</AccordionTrigger>
                             <AccordionContent>
-                                <Select value={year} onValueChange={setYear}>
+                                <Select value={year} onValueChange={handleYearChange}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select year" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="1">First Year</SelectItem>
-                                        <SelectItem value="2">Second Year</SelectItem>
-                                        <SelectItem value="3">Third Year</SelectItem>
-                                        <SelectItem value="4">Fourth Year</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </AccordionContent>
-                        </AccordionItem>
-                    </>
-                )}
-
-                {level === "masters" && (
-                    <>
-                        <AccordionItem value="faculty">
-                            <AccordionTrigger>Faculty</AccordionTrigger>
-                            <AccordionContent>
-                                <RadioGroup value={faculty} onValueChange={setFaculty}>
-                                    <div className="space-y-2">
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="engineering" id="engineering-masters" />
-                                            <Label htmlFor="engineering-masters">Engineering</Label>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="medical" id="medical-masters" />
-                                            <Label htmlFor="medical-masters">Medical</Label>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="business" id="business-masters" />
-                                            <Label htmlFor="business-masters">Business</Label>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="it" id="it-masters" />
-                                            <Label htmlFor="it-masters">IT</Label>
-                                        </div>
-                                    </div>
-                                </RadioGroup>
-                            </AccordionContent>
-                        </AccordionItem>
-
-                        <AccordionItem value="year">
-                            <AccordionTrigger>Year</AccordionTrigger>
-                            <AccordionContent>
-                                <Select value={year} onValueChange={setYear}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select year" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="1">First Year</SelectItem>
-                                        <SelectItem value="2">Second Year</SelectItem>
+                                        {(level === "bachelors" ? [1,2,3,4] : [1,2]).map(y => (
+                                            <SelectItem key={y} value={y.toString()}>{`Year ${y}`}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </AccordionContent>
@@ -236,21 +180,13 @@ export function CategoryFilter({ onFilterChange }: CategoryFilterProps) {
                     <AccordionItem value="examType">
                         <AccordionTrigger>Exam Type</AccordionTrigger>
                         <AccordionContent>
-                            <RadioGroup value={faculty} onValueChange={setFaculty}>
-                                <div className="space-y-2">
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="losewa" id="losewa" />
-                                        <Label htmlFor="losewa">LOSEWA</Label>
+                            <RadioGroup value={faculty} onValueChange={handleFacultyChange}>
+                                {["losewa","engineering-entrance","it-entrance"].map(e => (
+                                    <div className="flex items-center space-x-2" key={e}>
+                                        <RadioGroupItem value={e} id={e} />
+                                        <Label htmlFor={e}>{e.replace('-', ' ').toUpperCase()}</Label>
                                     </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="engineering-entrance" id="engineering-entrance" />
-                                        <Label htmlFor="engineering-entrance">Engineering Entrance</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="it-entrance" id="it-entrance" />
-                                        <Label htmlFor="it-entrance">IT Entrance</Label>
-                                    </div>
-                                </div>
+                                ))}
                             </RadioGroup>
                         </AccordionContent>
                     </AccordionItem>
@@ -258,12 +194,8 @@ export function CategoryFilter({ onFilterChange }: CategoryFilterProps) {
             </Accordion>
 
             <div className="mt-6 space-y-2">
-                <Button onClick={handleApplyFilters} className="w-full">
-                    Apply Filters
-                </Button>
-                <Button onClick={handleClearFilters} variant="outline" className="w-full">
-                    Clear Filters
-                </Button>
+                <Button onClick={handleApplyFilters} className="w-full">Apply Filters</Button>
+                <Button onClick={handleClearFilters} variant="outline" className="w-full">Clear Filters</Button>
             </div>
         </div>
     )

@@ -1,3 +1,4 @@
+
 declare type Book = {
     bookId: string;
     title: string;
@@ -12,6 +13,27 @@ declare type Book = {
     createdAt: string;
 }
 
+declare type BookForStore = {
+    userId: string;
+    _id: string;
+    title: string;
+    author: string;
+    description: string;
+    price: number;
+    condition: BookCondition
+    imageUrl: string[];
+    category: {
+        level : "school" | "highschool" | "bachelors" | "masters" | "exam",
+        faculty ?: string,
+        year ?: string,
+        class ?: string,
+        
+    };
+    type: BookType;
+    location: {lat : number, lon : number};
+    createdAt: string;
+}
+
 declare type PublicBook = {
     userId: string;
     bookId: string;
@@ -21,9 +43,15 @@ declare type PublicBook = {
     price: number;
     condition: BookCondition
     imageUrl: string[];
-    category: string;
-    type: BookType;
-    location: string;
+    category: {
+        level : "school" | "highschool" | "bachelors" | "masters" | "exam",
+        faculty ?: string,
+        year ?: string,
+        class ?: string,
+        
+    };
+    type: "Free" | "Exchange" | "Sell";
+    location: {lat : number, lon : number};
     createdAt: string;
 }
 
@@ -39,7 +67,12 @@ declare type CreateBook = {
     price: number;
     condition: BookCondition
     imageUrl: string[];
-    category: string;
+    category: {
+        level ?: "school" | "highschool" | "bachelors" | "masters" | "exam",
+        faculty ?: string,
+        year ?: string,
+        
+    };
     type: BookType
     location: string;
 }

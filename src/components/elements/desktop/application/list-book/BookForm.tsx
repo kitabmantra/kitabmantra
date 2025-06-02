@@ -120,7 +120,7 @@ export default function BookForm({
       price: values.price,
       condition: values.condition,
       imageUrl: images,
-      category: JSON.stringify(values.category),
+      category: values.category,
       type: values.type,
       location: JSON.stringify(location),
     }
@@ -142,6 +142,7 @@ export default function BookForm({
     }
     return names[level] || level
   }
+  console.log("this is form data : ",form.getValues());
 
   return (
     <div className="p-4 w-full bg-gradient-to-b from-slate-50 to-white min-h-screen flex justify-start items-start">

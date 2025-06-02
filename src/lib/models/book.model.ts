@@ -19,19 +19,34 @@ export const bookSchema = new Schema({
     },
     condition: {
         type: String,
+        enum : ['New','Like New', 'Good', 'Fair', 'Poor'],
         default: "Good"
     },
     imageUrl: {
         type: [String],
     },
     category: {
-        type: String,
+        level: {
+            type: String
+        },
+        faculty: {
+            type: String,
+        },
+        year: {
+            type: String,
+        },
+        class: {
+            type: String
+        }
     },
     type: {
-        type: String,
+        type : String,
+        enum : ['Free','Sell', 'Exchange'],
+        default : 'Free'
     },
     location: {
-        type: String,
+        lat : {type : Number},
+        lon : {type : Number}
     },
     createdAt: {
         type: Date,

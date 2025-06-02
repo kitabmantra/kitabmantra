@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 const Page = async () => {
     const response = await getAllBooks()
     const books = response.success ? response.formattedBooks as PublicBook[] : []
-    return <MarketPlace success={response.success} allBooks={books} />
+    return <MarketPlace success={response.success} allBooks={JSON.stringify(books)} />
 }
 
 export default Page

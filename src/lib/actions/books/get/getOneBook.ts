@@ -21,5 +21,5 @@ export const getOneBook = async ({ bookId }: { bookId: string }) => {
         location: books.location,
         createdAt: books.createdAt,
     };
-    return { success: true, formattedBook };
+    return { success: true, formattedBook : JSON.stringify(formattedBook) };
 };

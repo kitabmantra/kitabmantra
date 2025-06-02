@@ -12,7 +12,7 @@ interface BookCardProps {
 
 export function BookCard({ book, success }: BookCardProps) {
     if (!success) toast.error("Something went wrong!")
-    const bookCategories = JSON.parse(book.category)
+    const bookCategories = book.category;
     return (
         <Link href={`/marketplace/books/${book.bookId}`}>
             <Card className="h-full overflow-hidden hover:shadow-md transition-shadow">
