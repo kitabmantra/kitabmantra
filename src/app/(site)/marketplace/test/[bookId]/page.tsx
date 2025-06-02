@@ -6,6 +6,8 @@ import React from 'react'
 
 type Params = Promise<{ bookId: string }>
 
+export const revalidate = 60;
+
 export async function generateStaticParams() {
     const { formattedBooks } = await getAllBooks()
     
