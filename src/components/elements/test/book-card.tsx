@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ExternalLink, BookHeart } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { BookForStore } from "@/lib/types/books"
 
 export function BookCard({ book }: {book : BookForStore}) {
   const getCategoryDisplay = () => {

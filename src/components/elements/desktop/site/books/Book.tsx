@@ -7,6 +7,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { formatDistanceToNow } from "date-fns"
+import { PublicBook } from '@/lib/types/books'
 
 interface BookProps {
     book: string | undefined
@@ -20,8 +21,8 @@ const Book = ({
     if (!success) toast.error("Something went wrong!")
     const book: PublicBook = JSON.parse(bookString as string);
     const bookCategories = book.category
-    const lat: number | null = book.location.lat;
-    const lon: number | null = book.location.lon;
+    const lat = book.location.lat;
+    const lon = book.location.lon;
 
   
 

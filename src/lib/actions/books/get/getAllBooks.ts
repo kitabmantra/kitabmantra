@@ -1,6 +1,7 @@
 "use server"
 
 import { getBookModel } from "@/lib/hooks/database/get-book-model"
+import { PublicBook } from "@/lib/types/books";
 
 export const getAllBooks = async () => {
     const bookModel = await getBookModel();
@@ -20,6 +21,7 @@ export const getAllBooks = async () => {
         category: book.category,
         type: book.type,
         location: book.location,
+        bookStatus : book.bookStatus,
         createdAt: book.createdAt.toISOString().slice(0, 10),
     }))
     return { success: true, formattedBooks }

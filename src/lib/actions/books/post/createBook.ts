@@ -3,6 +3,7 @@
 import { getBookModel } from "@/lib/hooks/database/get-book-model";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "../../user/get/getCurrentUser";
+import { CreateBook } from "@/lib/types/books";
 
 interface CreateBookResponse {
     success: boolean

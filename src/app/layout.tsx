@@ -56,11 +56,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <QueryProvider>
           <SessionProviderLayout>
+        <QueryProvider>
             {children}
-          </SessionProviderLayout>
         </QueryProvider>
+          </SessionProviderLayout>
         <Analytics />
         <Toaster />
       </body>

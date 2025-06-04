@@ -2,9 +2,11 @@ import MyListings from '@/components/elements/desktop/application/my-listings/My
 import React from 'react'
 
 const Page = async () => {
-  
+
     return (
-        <MyListings  />
+        <div className='max-h-screen w-full overflow-y-auto'>
+            <MyListings />
+        </div>
     )
 }
 export default Page

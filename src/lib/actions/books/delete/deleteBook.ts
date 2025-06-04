@@ -26,7 +26,6 @@ export const deleteBook = async (id: string) => {
     return {
       success: true,
       message: "Deleted successfully",
-      data: deletedBook 
     };
 
   } catch (error) {

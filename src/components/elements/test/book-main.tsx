@@ -14,6 +14,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { BookCard } from './book-card';
 import { BookFiltersDesktop } from './bookfilterdesktop';
+import { BookForStore } from '@/lib/types/books';
 
 function BookMainPage() {
   const searchParams = useSearchParams();

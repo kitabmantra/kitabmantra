@@ -15,6 +15,7 @@ import {
   SelectContent,
   SelectItem
 } from '@/components/ui/select'
+import { PublicBook } from '@/lib/types/books'
 
 interface MarketPlaceProps {
   success: boolean

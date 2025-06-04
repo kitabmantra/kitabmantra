@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { bookCondition, bookStatus, bookType } from "../utils/data";
 
 export const bookSchema = new Schema({
     userId: {
@@ -19,11 +20,16 @@ export const bookSchema = new Schema({
     },
     condition: {
         type: String,
-        enum : ['New','Like New', 'Good', 'Fair', 'Poor'],
-        default: "Good"
+        enum: bookCondition,
+        default: bookCondition[0],
     },
     imageUrl: {
         type: [String],
+    },
+    bookStatus : {
+        type : String,
+        enum : bookStatus,
+        default : bookStatus[0],
     },
     category: {
         level: {
@@ -40,13 +46,21 @@ export const bookSchema = new Schema({
         }
     },
     type: {
-        type : String,
-        enum : ['Free','Sell', 'Exchange'],
-        default : 'Free'
+        type: String,
+        enum: bookType,
+        default: bookType[0],
     },
     location: {
-        lat : {type : Number},
-        lon : {type : Number}
+        address: {
+            type: String,
+            required: true,
+        },
+        lat: { type: Number },
+        lon: { type: Number }
+    },
+    advertise: {
+        type: Boolean,
+        default: false,
     },
     createdAt: {
         type: Date,

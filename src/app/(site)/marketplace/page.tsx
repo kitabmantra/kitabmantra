@@ -1,5 +1,6 @@
 import MarketPlace from '@/components/elements/desktop/site/MarketPlace'
 import { getAllBooks } from '@/lib/actions/books/get/getAllBooks'
+import { PublicBook } from '@/lib/types/books'
 import { Metadata } from 'next'
 import React from 'react'
 

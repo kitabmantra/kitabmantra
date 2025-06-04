@@ -1,16 +1,41 @@
+import { bookCategoryLevel, bookCondition, bookStatus, bookType, examFaculty, mastersFaculty, bachelorsFaculty, highLevelFaculty } from "../utils/data";
+
+
+declare type BookConditionType = typeof bookCondition[number];
+declare type BookTypeType = typeof bookType[number];
+declare type BookCategoryLevelType = typeof bookCategoryLevel[number];
+declare type HighLevelFacultyType = typeof highLevelFaculty[number];
+declare type BachelorsFacultyType = typeof bachelorsFaculty[number];
+declare type MastersFacultyType = typeof mastersFaculty[number];
+declare type ExamFacultyType = typeof examFaculty[number];
+declare type BookStatusType = typeof bookStatus[number];
+
+
+
+
+
+
+declare type LocationType = {
+    address: string,
+    lat?: number,
+    lon?: number
+}
+
 
 declare type Book = {
+    userId: string
     bookId: string;
     title: string;
     author: string;
     description: string;
     price: number;
-    condition: BookCondition
+    condition: BookConditionType
     imageUrl: string[];
     category: string;
-    type: BookType;
+    type: BookTypeType;
     location: string;
     createdAt: string;
+    bookStatus : BookStatusType;
 }
 
 declare type BookForStore = {
@@ -20,18 +45,19 @@ declare type BookForStore = {
     author: string;
     description: string;
     price: number;
-    condition: BookCondition
+    condition: BookConditionType
     imageUrl: string[];
     category: {
-        level : "school" | "highschool" | "bachelors" | "masters" | "exam",
-        faculty ?: string,
-        year ?: string,
-        class ?: string,
-        
+        level: BookCategoryLevelType
+        faculty?: string,
+        year?: string,
+        class?: string,
+
     };
-    type: BookType;
-    location: {lat : number, lon : number};
+    type: BookTypeType;
+    location: LocationType,
     createdAt: string;
+    bookStatus : BookStatusType;
 }
 
 declare type PublicBook = {
@@ -41,23 +67,23 @@ declare type PublicBook = {
     author: string;
     description: string;
     price: number;
-    condition: BookCondition
+    condition: BookConditionType
     imageUrl: string[];
     category: {
-        level : "school" | "highschool" | "bachelors" | "masters" | "exam",
-        faculty ?: string,
-        year ?: string,
-        class ?: string,
-        
+        level: BookCategoryLevelType
+        faculty?: string,
+        year?: string,
+        class?: string,
+
     };
-    type: "Free" | "Exchange" | "Sell";
-    location: {lat : number, lon : number};
+    type: BookTypeType
+    bookStatus : BookStatusType
+    location: LocationType
     createdAt: string;
 }
 
-type BookType = "Free" | "Exchange" | "Sell"
 
-type BookCondition = 'New' | 'Like New' | 'Good' | 'Fair' | 'Poor'
+
 
 declare type CreateBook = {
     userId: string;
@@ -65,14 +91,42 @@ declare type CreateBook = {
     author: string;
     description: string;
     price: number;
-    condition: BookCondition
+    condition: BookConditionType
     imageUrl: string[];
     category: {
-        level ?: "school" | "highschool" | "bachelors" | "masters" | "exam",
-        faculty ?: string,
-        year ?: string,
-        
+        level: BookCategoryLevelType,
+        faculty?: string,
+        year?: string,
+        class?: string
+
     };
-    type: BookType
-    location: string;
+    type: BookTypeType
+    location: LocationType
+    
 }
+
+
+declare type UpdateBook = {
+    bookId : string
+    title: string;
+    author: string;
+    description: string;
+    price: number;
+    condition: BookConditionType
+    imageUrl: string[];
+    category: {
+        level: BookCategoryLevelType,
+        faculty?: string,
+        year?: string,
+        class?: string
+
+    };
+    type: BookTypeType
+    location: LocationType
+    bookStatus : BookStatusType
+    
+}
+
+
+
+

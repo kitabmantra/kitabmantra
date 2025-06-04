@@ -4,6 +4,7 @@ import { formatDistanceToNow } from "date-fns"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import toast from "react-hot-toast"
+import { PublicBook } from "@/lib/types/books"
 
 interface BookCardProps {
     book: PublicBook

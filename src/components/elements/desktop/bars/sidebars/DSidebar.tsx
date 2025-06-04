@@ -25,19 +25,18 @@ export function DSidebar({ user }: DSidebarProps) {
     return (
         <aside
             className={cn(
-                "flex h-[calc(100vh-2rem)] flex-col border-r bg-background transition-all duration-300 ease-in-out overflow-hidden",
+                "flex h-[calc(100vh-2rem)] flex-col border-r bg-gradient-to-b from-white to-[#1E3A8A]/5 transition-all duration-300 ease-in-out overflow-hidden",
                 collapsed ? "w-16" : "w-64",
             )}
         >
-            <div className="flex h-16 items-center justify-between border-b px-4">
-
+            <div className="flex h-16 items-center justify-between border-b px-4 bg-gradient-to-r from-[#1E3A8A]/10 to-transparent">
                 <div className="flex items-center space-x-2">
                     {!collapsed ? (
-                        <h2 className="text-lg font-semibold whitespace-nowrap">
+                        <h2 className="text-lg font-semibold whitespace-nowrap bg-gradient-to-r from-[#1E3A8A] to-[#0D9488] bg-clip-text text-transparent">
                             Kitab Mantra
                         </h2>
                     ) : (
-                        <h2 className="text-sm font-bold whitespace-nowrap">
+                        <h2 className="text-sm font-bold whitespace-nowrap bg-gradient-to-r from-[#1E3A8A] to-[#0D9488] bg-clip-text text-transparent">
                             KM
                         </h2>
                     )}
@@ -45,7 +44,7 @@ export function DSidebar({ user }: DSidebarProps) {
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="hidden md:flex h-6 w-6"
+                    className="hidden md:flex h-6 w-6 hover:bg-[#1E3A8A]/10 hover:text-[#1E3A8A]"
                     onClick={() => setCollapsed(!collapsed)}
                 >
                     {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -65,8 +64,10 @@ export function DSidebar({ user }: DSidebarProps) {
                                                 <Link
                                                     href={item.href}
                                                     className={cn(
-                                                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-300 hover:bg-accent hover:text-accent-foreground",
-                                                        isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+                                                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-300",
+                                                        isActive 
+                                                            ? "bg-gradient-to-r from-[#1E3A8A]/20 to-[#0D9488]/20 text-[#1E3A8A]" 
+                                                            : "text-[#4B5563] hover:bg-gradient-to-r hover:from-[#1E3A8A]/10 hover:to-[#0D9488]/10 hover:text-[#1E3A8A]",
                                                         collapsed ? "justify-center" : ""
                                                     )}
                                                 >
@@ -81,8 +82,8 @@ export function DSidebar({ user }: DSidebarProps) {
                                                     </span>
                                                 </Link>
                                             </TooltipTrigger>
-                                            <TooltipContent side="right" sideOffset={10}>
-                                                <p>{item.title}</p>
+                                            <TooltipContent side="right" sideOffset={10} className="bg-white border-[#1E3A8A]/10">
+                                                <p className="text-[#1E3A8A]">{item.title}</p>
                                             </TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
@@ -90,8 +91,10 @@ export function DSidebar({ user }: DSidebarProps) {
                                     <Link
                                         href={item.href}
                                         className={cn(
-                                            "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                                            isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+                                            "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-300",
+                                            isActive 
+                                                ? "bg-gradient-to-r from-[#1E3A8A]/20 to-[#0D9488]/20 text-[#1E3A8A]" 
+                                                : "text-[#4B5563] hover:bg-gradient-to-r hover:from-[#1E3A8A]/10 hover:to-[#0D9488]/10 hover:text-[#1E3A8A]"
                                         )}
                                     >
                                         <item.icon className="h-5 w-5 mr-3" />
@@ -103,7 +106,9 @@ export function DSidebar({ user }: DSidebarProps) {
                     })}
                 </ul>
             </nav>
-            <UserDropdown user={user} collapsed={collapsed} />
+            <div className="border-t bg-gradient-to-t from-[#1E3A8A]/5 to-transparent">
+                <UserDropdown user={user} collapsed={collapsed} />
+            </div>
         </aside>
     )
 }
