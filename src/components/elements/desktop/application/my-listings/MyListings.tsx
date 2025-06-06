@@ -196,7 +196,7 @@ export default function MyListingsPage() {
             <div className="relative top-3">
               {userBooksLoading || isFetching ? (
                 <div className="grid mt-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 my-2 max-h-[650px] md:h-[630px] lg:h-[650px] overflow-y-auto xl:grid-cols-5 gap-y-5 gap-x-3">
-                  {Array.from({ length: itemsPerPage }).map((_, i) => (
+                  {Array.from({ length: 10 }).map((_, i) => (
                     <Card key={i} className="w-[280px] h-[300px] border-slate-200 overflow-hidden">
                       <div className="h-48 w-full bg-slate-100">
                         <Skeleton className="h-full w-full" />
