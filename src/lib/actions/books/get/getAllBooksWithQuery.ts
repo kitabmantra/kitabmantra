@@ -30,7 +30,7 @@ export async function getBooks(options: GetBooksOptions = {}) {
     class: bookClass
   } = options
   let { page = 1,
-    limit = 6, } = options;
+    limit = 30, } = options;
 
   try {
 
@@ -87,11 +87,10 @@ export async function getBooks(options: GetBooksOptions = {}) {
     if (bookClass) {
       query['category.class'] = bookClass
     }
-    console.log('this is hte queyr : ', query);
 
     const Book = await getBookModel()
 
-    if (limit > 6) limit = 6;
+    if (limit > 30) limit = 30;
     if (page < 0) page = 1;
 
     const skip = (Number(page) - 1) * Number(limit)
@@ -109,7 +108,6 @@ export async function getBooks(options: GetBooksOptions = {}) {
       await Book.countDocuments(query).exec()
     ])
 
-    console.log(books.length, "this is the length of hte books ")
 
 
 

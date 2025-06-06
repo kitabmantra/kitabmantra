@@ -18,7 +18,7 @@ import { Card } from '@/components/ui/card';
 
 function BookMainPage() {
   const searchParams = useSearchParams();
-  const itemPerPage = 6;
+  const itemPerPage = 30;
 
   const [params, setParams] = useState({
     search: searchParams.get("search") || "",
