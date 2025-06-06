@@ -25,7 +25,7 @@ import { Card } from "@/components/ui/card"
 
 
 export default function MyListingsPage() {
-  const itemsPerPage = 6
+  const itemsPerPage = 30
   const [query, setQuery] = useState({
     page: 1,
     limit: itemsPerPage,
@@ -47,7 +47,6 @@ export default function MyListingsPage() {
     search: query.search,
     oldestFirst: query.oldestFirst,
   })
-
   const totalPages = userBooks?.totalPages || 1
   const currentPage = query.page
   const totalBooks = userBooks?.totalBooks || 0

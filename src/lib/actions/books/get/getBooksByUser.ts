@@ -33,7 +33,7 @@ export const getBooksByUser = async () => {
 
 
 export const getUserBookByQuery = async (options: QueryType) => {
-    const { page = 1, limit = 6, search = "", oldestFirst = false } = options;
+    const { page = 1, limit = 30, search = "", oldestFirst = false } = options;
     
     try {
         const currentUser = await getCurrentUser();
@@ -54,7 +54,7 @@ export const getUserBookByQuery = async (options: QueryType) => {
         }
 
         const Book = await getBookModel();
-        const validatedLimit = Math.min(Math.max(Number(limit), 6)); // Ensure limit <= 4
+        const validatedLimit = Math.min(Math.max(Number(limit), 30)); // Ensure limit <= 4
         const validatedPage = Math.max(Number(page), 1); // Ensure page >= 1
         const skip = (validatedPage - 1) * validatedLimit;
         const sortOrder = oldestFirst ? 1 : -1;

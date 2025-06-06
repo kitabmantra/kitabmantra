@@ -5,20 +5,21 @@ import { Menu, X, User } from "lucide-react"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Spinner } from "@/components/elements/common/spinner/spinner"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useGetUserFromSession } from "@/lib/hooks/tanstack-query/query-hook/user/use-get-user-session"
 import { handleLogOut } from "@/lib/actions/auth/sign-out"
 
 export default function Header() {
-    const { data: session, refetch } = useGetUserFromSession()
-    
+    const { data: session, refetch, isLoading } = useGetUserFromSession()
+
     const [isMenuOpen, setIsMenuOpen] = useState(false)
 
     const getDashboardLink = () => {
@@ -29,8 +30,8 @@ export default function Header() {
 
     const navVariants = {
         hidden: { opacity: 0, y: -20 },
-        visible: { 
-            opacity: 1, 
+        visible: {
+            opacity: 1,
             y: 0,
             transition: {
                 duration: 0.5,
@@ -53,7 +54,7 @@ export default function Header() {
     }
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-sm border-b border-slate-200">
+        <header className="fixed top-0 left-0 right-0 z-[99] bg-white/95 backdrop-blur-sm border-b border-slate-200">
             <div className="container mx-auto px-4 md:px-6">
                 <div className="flex h-20 items-center justify-between">
                     <motion.div
@@ -63,7 +64,7 @@ export default function Header() {
                         className="relative"
                     >
                         <Link href="/" className="flex items-center space-x-2">
-                            <motion.span 
+                            <motion.span
                                 className="text-2xl font-bold bg-gradient-to-r from-[#1E3A8A] to-[#0D9488] bg-clip-text text-transparent"
                                 whileHover={{ scale: 1.05 }}
                                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -74,7 +75,7 @@ export default function Header() {
                     </motion.div>
 
                     {/* Desktop Navigation */}
-                    <motion.nav 
+                    <motion.nav
                         variants={navVariants}
                         initial="hidden"
                         animate="visible"
@@ -88,7 +89,7 @@ export default function Header() {
                                         className="text-sm font-medium text-[#4B5563] transition-colors hover:text-[#0D9488] relative group"
                                     >
                                         {item}
-                                        <motion.span 
+                                        <motion.span
                                             className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#0D9488] group-hover:w-full transition-all duration-300"
                                             initial={{ width: 0 }}
                                             whileHover={{ width: "100%" }}
@@ -100,7 +101,7 @@ export default function Header() {
                                         className="text-sm font-medium text-[#4B5563] transition-colors hover:text-[#0D9488] relative group"
                                     >
                                         {item}
-                                        <motion.span 
+                                        <motion.span
                                             className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#0D9488] group-hover:w-full transition-all duration-300"
                                             initial={{ width: 0 }}
                                             whileHover={{ width: "100%" }}
@@ -112,74 +113,82 @@ export default function Header() {
                     </motion.nav>
 
                     {/* Desktop Auth Buttons */}
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.5 }}
                         className="hidden md:flex items-center space-x-4"
                     >
-                        {session ? (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                                        <Avatar className="h-8 w-8">
-                                            <AvatarImage src={session.image || ""} alt={session.name || ""} />
-                                            <AvatarFallback>
-                                                <User className="h-4 w-4" />
-                                            </AvatarFallback>
-                                        </Avatar>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-56" align="end" forceMount>
-                                    <DropdownMenuLabel className="font-normal">
-                                        <div className="flex flex-col space-y-1">
-                                                <p className="text-sm font-medium leading-none">{session.name}</p>
-                                            <p className="text-xs leading-none text-muted-foreground">
-                                                {session.email}
-                                            </p>
-                                        </div>
-                                    </DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <Link href={getDashboardLink()}>
-                                        <DropdownMenuItem className="cursor-pointer">
-                                            Dashboard
-                                        </DropdownMenuItem>
-                                    </Link>
-                                    <Link href="/dashboard/settings">
-                                        <DropdownMenuItem className="cursor-pointer">
-                                            Settings
-                                        </DropdownMenuItem>
-                                    </Link>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem 
-                                        className="cursor-pointer text-red-600 focus:text-red-600"
-                                        onClick={() => {
-                                            handleLogOut()
-                                            refetch()
-                                        }}
-                                    >
-                                        Log out
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        ) : (
-                            <>
-                                <Link href="/login">
-                                    <Button
-                                        variant="outline"
-                                        className="relative overflow-hidden border-[#1E3A8A] text-[#1E3A8A] hover:text-[#0D9488] hover:border-[#0D9488] transition-all duration-200 group"
-                                    >
-                                        <motion.span
-                                            className="absolute inset-0 bg-[#0D9488] opacity-0 group-hover:opacity-10 transition-opacity duration-200"
-                                            initial={{ scale: 0 }}
-                                            whileHover={{ scale: 1 }}
-                                        />
-                                        Sign In
-                                    </Button>
-                                </Link>
-                               
-                            </>
-                        )}
+                        {
+                            isLoading ? (
+                                <Spinner />
+
+                            ) : (
+                                <>
+                                    {session ? (
+                                        <DropdownMenu >
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage src={session.image || ""} alt={session.name || ""} />
+                                                        <AvatarFallback>
+                                                            <User className="h-4 w-4" />
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent className="w-56 z-[100]" align="end" forceMount>
+                                                <DropdownMenuLabel className="font-normal">
+                                                    <div className="flex flex-col space-y-1">
+                                                        <p className="text-sm font-medium leading-none">{session.name}</p>
+                                                        <p className="text-xs leading-none text-muted-foreground">
+                                                            {session.email}
+                                                        </p>
+                                                    </div>
+                                                </DropdownMenuLabel>
+                                                <DropdownMenuSeparator />
+                                                <Link href={getDashboardLink()}>
+                                                    <DropdownMenuItem className="cursor-pointer">
+                                                        Dashboard
+                                                    </DropdownMenuItem>
+                                                </Link>
+                                                <Link href="/dashboard/settings">
+                                                    <DropdownMenuItem className="cursor-pointer">
+                                                        Settings
+                                                    </DropdownMenuItem>
+                                                </Link>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem
+                                                    className="cursor-pointer text-red-600 focus:text-red-600"
+                                                    onClick={() => {
+                                                        handleLogOut()
+                                                        refetch()
+                                                    }}
+                                                >
+                                                    Log out
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    ) : (
+                                        <>
+                                            <Link href="/login">
+                                                <Button
+                                                    variant="outline"
+                                                    className="relative overflow-hidden border-[#1E3A8A] text-[#1E3A8A] hover:text-[#0D9488] hover:border-[#0D9488] transition-all duration-200 group"
+                                                >
+                                                    <motion.span
+                                                        className="absolute inset-0 bg-[#0D9488] opacity-0 group-hover:opacity-10 transition-opacity duration-200"
+                                                        initial={{ scale: 0 }}
+                                                        whileHover={{ scale: 1 }}
+                                                    />
+                                                    Sign In
+                                                </Button>
+                                            </Link>
+
+                                        </>
+                                    )}
+                                </>
+                            )}
                     </motion.div>
 
                     {/* Mobile Menu Button */}
@@ -233,7 +242,7 @@ export default function Header() {
                         transition={{ duration: 0.3 }}
                         className="md:hidden border-t border-[#1E3A8A]/10 bg-white/95 backdrop-blur-sm"
                     >
-                        <motion.div 
+                        <motion.div
                             className="container mx-auto px-4 py-4 space-y-4"
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -270,7 +279,7 @@ export default function Header() {
                                     </motion.div>
                                 ))}
                             </nav>
-                            <motion.div 
+                            <motion.div
                                 className="flex flex-col space-y-2 pt-4 border-t border-[#1E3A8A]/10"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -283,7 +292,7 @@ export default function Header() {
                                                 Dashboard
                                             </Button>
                                         </Link>
-                                        <Button 
+                                        <Button
                                             variant="outline"
                                             className="w-full border-red-600 text-red-600 hover:bg-red-50"
                                             onClick={() => {
@@ -305,7 +314,7 @@ export default function Header() {
                                                 Sign In
                                             </Button>
                                         </Link>
-                                       
+
                                     </>
                                 )}
                             </motion.div>

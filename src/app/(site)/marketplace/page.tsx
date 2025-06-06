@@ -1,4 +1,4 @@
-import BookMainPage from '@/components/elements/test/book-main'
+import BookMainPage from '@/components/elements/desktop/site/books/book-main'
 import React, { Suspense } from 'react'
 
 function page() {

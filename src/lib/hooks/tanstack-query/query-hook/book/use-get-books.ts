@@ -1,4 +1,4 @@
-import { getBooks, GetBooksOptions } from "@/lib/actions/test/book";
+import { getBooks, GetBooksOptions } from "@/lib/actions/books/get/getAllBooksWithQuery";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 
 export const fetchBookFromQuery = async (query: GetBooksOptions) => {
