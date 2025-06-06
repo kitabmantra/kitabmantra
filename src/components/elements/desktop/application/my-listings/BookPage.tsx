@@ -14,6 +14,7 @@ import {
   Star,
   Shield,
   Eye,
+  Trash2,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -50,6 +51,7 @@ const Book = ({ book, success }: BookProps) => {
   const { mutate: updateBookStatus, isPending: bookStatusUpdating } = useUpdateBookStatusById();
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedStatus, setSelectedStatus] = useState<typeof bookStatus[number] | null>(null)
 
   if (!success) toast.error("Something went wrong!")
@@ -243,8 +245,8 @@ const Book = ({ book, success }: BookProps) => {
                             </div>
                             <BookPageDropDownPage
                               book={book}
-                              onDelete={handleDelete}
                               onStatusChange={() => setIsStatusDialogOpen(true)}
+                              onDeleteClick={() => setIsDeleteDialogOpen(true)}
                             />
                           </div>
                         </div>
@@ -417,6 +419,38 @@ const Book = ({ book, success }: BookProps) => {
               disabled={!selectedStatus || bookStatusUpdating || selectedStatus === book.bookStatus}
             >
               Update Status
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="bg-white rounded-2xl border-0 shadow-xl max-w-md">
+          <AlertDialogHeader className="text-center pb-4">
+            <div className="mx-auto w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <Trash2 className="h-7 w-7 text-red-600" />
+            </div>
+            <AlertDialogTitle className="text-xl font-bold text-slate-900">
+              Delete Book
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-600 text-base leading-relaxed">
+              Are you sure you want to delete this book? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-3 pt-4">
+            <AlertDialogCancel className="flex-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl h-11 font-medium border-0">
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              className="flex-1 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-600 text-white rounded-xl h-11 font-medium"
+              onClick={() => {
+                handleDelete(book.bookId);
+                setIsDeleteDialogOpen(false);
+              }}
+              disabled={isPending}
+            >
+              {isPending ? "Deleting..." : "Delete Book"}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

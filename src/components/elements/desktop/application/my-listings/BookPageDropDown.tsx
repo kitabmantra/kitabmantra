@@ -8,11 +8,11 @@ import type { Book as bookType } from "@/lib/types/books";
 
 interface BookPageDropDownProps {
   book: bookType;
-  onDelete: (bookId: string) => void;
   onStatusChange: () => void;
+  onDeleteClick: () => void;
 }
 
-function BookPageDropDownPage({ book, onDelete, onStatusChange }: BookPageDropDownProps) {
+function BookPageDropDownPage({ book, onStatusChange, onDeleteClick }: BookPageDropDownProps) {
   const router = useRouter();
 
   return (
@@ -57,7 +57,7 @@ function BookPageDropDownPage({ book, onDelete, onStatusChange }: BookPageDropDo
             className="text-red-600 hover:!text-red-600 hover:!bg-red-50 focus:!text-red-600 focus:!bg-red-50"
             onSelect={(e) => {
               e.preventDefault();
-              onDelete(book.bookId);
+              onDeleteClick();
             }}
           >
             <Trash2 className="mr-2 h-4 w-4" />

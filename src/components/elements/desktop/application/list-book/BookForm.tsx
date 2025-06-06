@@ -179,6 +179,49 @@ export default function BookForm({ userId }: PostBookPageProps) {
     let deleteImageOnError: string[] = []
     setIsSubmitting(true)
     try {
+      // Validate the form first
+      const validationResult = await form.trigger();
+      if (!validationResult) {
+        toast.error("Please fill in all required fields correctly");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Additional validation for category fields based on level
+      const level = form.getValues("category.level");
+      const category = form.getValues("category");
+      
+      if (level === "school" && !category.class) {
+        toast.error("Please select a class for school level");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (level === "highschool" && (!category.class || !category.faculty)) {
+        toast.error("Please select both class and faculty for high school level");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if ((level === "bachelors" || level === "masters") && (!category.faculty || !category.year)) {
+        toast.error("Please select both faculty and year for " + level);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (level === "exam" && !category.faculty) {
+        toast.error("Please select an exam type");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validate images
+      if (files.length === 0) {
+        toast.error("Please upload at least one image");
+        setIsSubmitting(false);
+        return;
+      }
+
       let uploadedImages: string[] = []
       const values = form.getValues();
 

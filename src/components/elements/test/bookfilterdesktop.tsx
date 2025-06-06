@@ -12,6 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Search, X } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { bookCondition, bookType, bookCategoryLevel, highLevelFaculty, bachelorsFaculty, mastersFaculty, examFaculty } from "@/lib/utils/data"
 
 const formSchema = z.object({
   search: z.string().optional(),
@@ -226,7 +227,6 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
       setOpenAccordions((prev) => {
         const newAccordions = prev.filter((acc) => acc !== "education-class")
 
-        // If highschool level is selected, open faculty accordion next
         if (watchLevel === "highschool") {
           newAccordions.push("education-faculty")
         }
@@ -245,7 +245,6 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
       setOpenAccordions((prev) => {
         const newAccordions = prev.filter((acc) => acc !== "education-faculty")
 
-        // Only open year accordion for bachelors and masters
         if ((watchLevel === "bachelors" || watchLevel === "masters") && getYearOptions(watchLevel).length > 0) {
           newAccordions.push("education-year")
         }
@@ -327,30 +326,34 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
   const getFacultyOptions = (level?: string) => {
     const currentLevel = level || watchLevel
     if (currentLevel === "highschool") {
-      return [
-        { value: "science", label: "Science" },
-        { value: "management", label: "Management" },
-      ]
+      return highLevelFaculty.map(faculty => ({
+        value: faculty,
+        label: faculty.charAt(0).toUpperCase() + faculty.slice(1)
+      }))
     }
-    if (currentLevel === "bachelors" || currentLevel === "masters") {
-      return [
-        { value: "engineering", label: "Engineering" },
-        { value: "medical", label: "Medical" },
-        { value: "business", label: "Business" },
-        { value: "it", label: "IT" },
-      ]
+    if (currentLevel === "bachelors") {
+      return bachelorsFaculty.map(faculty => ({
+        value: faculty,
+        label: faculty.charAt(0).toUpperCase() + faculty.slice(1)
+      }))
+    }
+    if (currentLevel === "masters") {
+      return mastersFaculty.map(faculty => ({
+        value: faculty,
+        label: faculty.charAt(0).toUpperCase() + faculty.slice(1)
+      }))
     }
     if (currentLevel === "exam") {
-      return [
-        { value: "loksewa", label: "Loksewa" },
-        { value: "cmat", label: "CMAT" },
-        { value: "csit", label: "CSIT" },
-        { value: "ioe", label: "IOE" },
-      ]
+      return examFaculty.map(faculty => ({
+        value: faculty,
+        label: faculty.split('-').map(word =>
+          word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ')
+      }))
     }
     return []
   }
-   const handleYearChange = (year: string) => {
+  const handleYearChange = (year: string) => {
     form.setValue("year", year)
 
     // Close year accordion after selection
@@ -373,11 +376,20 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
   }
 
   return (
-    <div className="w-full md:block bg-card rounded-lg shadow-sm p-4">
+    <div className="w-full md:block bg-white rounded-lg shadow-lg p-6 border border-slate-200">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-[#1E3A8A] to-[#0D9488] bg-clip-text text-transparent">
+          Find Your Perfect Book
+        </h2>
+        <p className="text-sm text-slate-600 mt-1">
+          Use filters to discover books that match your needs
+        </p>
+      </div>
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="flex flex-col gap-4">
-            {/* Combined Search Input */}
+          <div className="flex flex-col gap-6">
+            {/* Search Input */}
             <div className="space-y-4">
               <FormField
                 control={form.control}
@@ -386,10 +398,10 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                   <FormItem>
                     <FormControl>
                       <div className="relative">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#0D9488]" />
                         <Input
                           placeholder="Search by title or author..."
-                          className="pl-9"
+                          className="pl-10 border-slate-200 focus:border-[#0D9488] focus:ring-[#0D9488] h-11"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e)
@@ -401,7 +413,7 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="absolute right-1 top-1 h-7 w-7 p-0"
+                            className="absolute right-1 top-1 h-8 w-8 p-0 text-slate-400 hover:text-slate-600"
                             onClick={clearSearch}
                           >
                             <X className="h-4 w-4" />
@@ -415,15 +427,17 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
             </div>
 
             <Accordion type="multiple" className="w-full" value={openAccordions} onValueChange={setOpenAccordions}>
-              <AccordionItem value="basic-filters">
-                <AccordionTrigger>Basic Filters</AccordionTrigger>
-                <AccordionContent className="space-y-4">
+              <AccordionItem value="basic-filters" className="border-slate-200">
+                <AccordionTrigger className="text-[#1E3A8A] hover:text-[#0D9488] font-medium">
+                  Basic Filters
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
                   <FormField
                     control={form.control}
                     name="location"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-medium">Location</FormLabel>
+                        <FormLabel className="text-xs font-medium text-slate-700">Location</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="Enter location..."
@@ -444,7 +458,7 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                       name="minPrice"
                       render={({ field }) => (
                         <FormItem className="w-full">
-                          <FormLabel className="text-xs font-medium">Min Price (Rs)</FormLabel>
+                          <FormLabel className="text-xs font-medium text-slate-700">Min Price (Rs)</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -466,7 +480,7 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                       name="maxPrice"
                       render={({ field }) => (
                         <FormItem className="w-full">
-                          <FormLabel className="text-xs font-medium">Max Price (Rs)</FormLabel>
+                          <FormLabel className="text-xs font-medium text-slate-700">Max Price (Rs)</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -488,7 +502,7 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                     name="condition"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-medium">Condition</FormLabel>
+                        <FormLabel className="text-xs font-medium text-slate-700">Condition</FormLabel>
                         <FormControl>
                           <RadioGroup
                             onValueChange={(value) => {
@@ -499,29 +513,15 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                             className="grid grid-cols-3 space-y-2"
                           >
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="all" id="condition-all" />
-                              <FormLabel htmlFor="condition-all">All</FormLabel>
+                              <RadioGroupItem value="all" id="condition-all" className="text-blue-600" />
+                              <FormLabel htmlFor="condition-all" className="text-slate-700">All</FormLabel>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="New" id="condition-new" />
-                              <FormLabel htmlFor="condition-new">New</FormLabel>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="Like New" id="condition-like-new" />
-                              <FormLabel htmlFor="condition-like-new">Like New</FormLabel>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="Good" id="condition-good" />
-                              <FormLabel htmlFor="condition-good">Good</FormLabel>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="Fair" id="condition-fair" />
-                              <FormLabel htmlFor="condition-fair">Fair</FormLabel>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="Poor" id="condition-poor" />
-                              <FormLabel htmlFor="condition-poor">Poor</FormLabel>
-                            </div>
+                            {bookCondition.map((condition) => (
+                              <div key={condition} className="flex items-center space-x-2">
+                                <RadioGroupItem value={condition} id={`condition-${condition.toLowerCase()}`} className="text-blue-600" />
+                                <FormLabel htmlFor={`condition-${condition.toLowerCase()}`} className="text-slate-700">{condition}</FormLabel>
+                              </div>
+                            ))}
                           </RadioGroup>
                         </FormControl>
                       </FormItem>
@@ -533,7 +533,7 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                     name="type"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-medium">Type</FormLabel>
+                        <FormLabel className="text-xs font-medium text-slate-700">Type</FormLabel>
                         <FormControl>
                           <RadioGroup
                             onValueChange={(value) => {
@@ -547,18 +547,12 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                               <RadioGroupItem value="all" id="type-all" />
                               <FormLabel htmlFor="type-all">All Types</FormLabel>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="Free" id="type-free" />
-                              <FormLabel htmlFor="type-free">Free</FormLabel>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="Exchange" id="type-exchange" />
-                              <FormLabel htmlFor="type-exchange">Exchange</FormLabel>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="Sell" id="type-sell" />
-                              <FormLabel htmlFor="type-sell">Sell</FormLabel>
-                            </div>
+                            {bookType.map((type) => (
+                              <div key={type} className="flex items-center space-x-2">
+                                <RadioGroupItem value={type} id={`type-${type.toLowerCase()}`} />
+                                <FormLabel htmlFor={`type-${type.toLowerCase()}`}>{type}</FormLabel>
+                              </div>
+                            ))}
                           </RadioGroup>
                         </FormControl>
                       </FormItem>
@@ -567,9 +561,11 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                 </AccordionContent>
               </AccordionItem>
 
-              <AccordionItem value="education-level">
-                <AccordionTrigger>Education Level</AccordionTrigger>
-                <AccordionContent className="space-y-4">
+              <AccordionItem value="education-level" className="border-slate-200">
+                <AccordionTrigger className="text-[#1E3A8A] hover:text-[#0D9488] font-medium">
+                  Education Level
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
                   <FormField
                     control={form.control}
                     name="level"
@@ -581,26 +577,19 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                             value={field.value || ""}
                             className="flex flex-col space-y-2"
                           >
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="school" id="school" />
-                              <FormLabel htmlFor="school">School (1-10)</FormLabel>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="highschool" id="highschool" />
-                              <FormLabel htmlFor="highschool">High School (11-12)</FormLabel>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="bachelors" id="bachelors" />
-                              <FormLabel htmlFor="bachelors">Bachelor&apos;s</FormLabel>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="masters" id="masters" />
-                              <FormLabel htmlFor="masters">Master&apos;s</FormLabel>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="exam" id="exam" />
-                              <FormLabel htmlFor="exam">Entrance Exam</FormLabel>
-                            </div>
+                            {bookCategoryLevel.map((level) => (
+                              <div key={level} className="flex items-center space-x-2">
+                                <RadioGroupItem value={level} id={level} />
+                                <FormLabel htmlFor={level}>
+                                  {level === 'school' ? 'School (1-10)' :
+                                    level === 'highschool' ? 'High School (11-12)' :
+                                      level === 'bachelors' ? "Bachelor's" :
+                                        level === 'masters' ? "Master's" :
+                                          level === 'exam' ? 'Entrance Exam' :
+                                            'Others'}
+                                </FormLabel>
+                              </div>
+                            ))}
                           </RadioGroup>
                         </FormControl>
                       </FormItem>
@@ -610,9 +599,11 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
               </AccordionItem>
 
               {watchLevel && getClassOptions().length > 0 && (
-                <AccordionItem value="education-class">
-                  <AccordionTrigger>Class</AccordionTrigger>
-                  <AccordionContent className="space-y-4">
+                <AccordionItem value="education-class" className="border-slate-200">
+                  <AccordionTrigger className="text-[#1E3A8A] hover:text-[#0D9488] font-medium">
+                    Class
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-4">
                     <FormField
                       control={form.control}
                       name="class"
@@ -644,9 +635,11 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
               )}
 
               {watchLevel && getFacultyOptions().length > 0 && (
-                <AccordionItem value="education-faculty">
-                  <AccordionTrigger>{watchLevel === "exam" ? "Exam Type" : "Faculty"}</AccordionTrigger>
-                  <AccordionContent className="space-y-4">
+                <AccordionItem value="education-faculty" className="border-slate-200">
+                  <AccordionTrigger className="text-[#1E3A8A] hover:text-[#0D9488] font-medium">
+                    {watchLevel === "exam" ? "Exam Type" : "Faculty"}
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-4">
                     <FormField
                       control={form.control}
                       name="faculty"
@@ -680,9 +673,11 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
               )}
 
               {watchLevel && getYearOptions().length > 0 && (
-                <AccordionItem value="education-year">
-                  <AccordionTrigger>Year</AccordionTrigger>
-                  <AccordionContent className="space-y-4">
+                <AccordionItem value="education-year" className="border-slate-200">
+                  <AccordionTrigger className="text-[#1E3A8A] hover:text-[#0D9488] font-medium">
+                    Year
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-4">
                     <FormField
                       control={form.control}
                       name="year"
@@ -715,22 +710,30 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
             </Accordion>
 
             {/* Buttons */}
-            <div className="flex justify-between gap-2 mt-2">
-              <Button type="button" variant="outline" onClick={resetFilters}>
-                Reset
+            <div className="flex justify-between gap-3 mt-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={resetFilters} 
+                className="border-[#1E3A8A] text-[#1E3A8A] hover:bg-[#1E3A8A] hover:text-white transition-colors"
+              >
+                Reset All
               </Button>
-              <Button type="submit" className="bg-slate-800 text-white hover:bg-slate-700">
+              <Button 
+                type="submit" 
+                className="bg-[#0D9488] text-white hover:bg-[#0D9488]/90 transition-colors"
+              >
                 Apply Filters
               </Button>
             </div>
 
             {/* Pending and Active Filters */}
             {(pendingFilters.length > 0 || activeFilters.length > 0) && (
-              <div className="space-y-2 pt-2">
+              <div className="space-y-3 pt-4 border-t border-slate-200">
                 {/* Pending Filters */}
                 {pendingFilters.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">
+                    <p className="text-sm font-medium text-[#1E3A8A] mb-2">
                       Selected Filters (Click Apply to activate):
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -738,7 +741,7 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                         <Badge
                           key={index}
                           variant="outline"
-                          className="px-2 py-1 cursor-pointer hover:bg-gray-100 transition-colors border-blue-300 text-blue-700"
+                          className="px-2 py-1 cursor-pointer hover:bg-[#0D9488]/10 transition-colors border-[#0D9488] text-[#0D9488]"
                           onClick={() => removePendingFilter(filter)}
                         >
                           {filter}
@@ -752,13 +755,13 @@ export function BookFiltersDesktop({ handleReset }: BookFilterDesktop) {
                 {/* Active Filters */}
                 {activeFilters.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Applied Filters:</p>
+                    <p className="text-sm font-medium text-[#1E3A8A] mb-2">Applied Filters:</p>
                     <div className="flex flex-wrap gap-2">
                       {activeFilters.map((filter, index) => (
                         <Badge
                           key={index}
                           variant="secondary"
-                          className="px-2 py-1 bg-green-100 text-green-800 border-green-300"
+                          className="px-2 py-1 bg-[#0D9488]/10 text-[#0D9488] border-[#0D9488]/20"
                         >
                           {filter}
                         </Badge>

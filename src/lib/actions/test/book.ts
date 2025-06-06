@@ -1,6 +1,7 @@
 /*eslint-disable*/
 "use server"
 import { getBookModel } from "@/lib/hooks/database/get-book-model"
+import { bookStatus } from "@/lib/utils/data"
 
 export type GetBooksOptions = {
   page?: number,
@@ -30,11 +31,13 @@ export async function getBooks(options: GetBooksOptions = {}) {
     class: bookClass
   } = options
   let { page = 1,
-    limit = 4, } = options;
+    limit = 6, } = options;
 
   try {
 
-    const query : any = {}
+    const query : any = {
+
+    }
 
 
     if (search && search.trim() != "") {
@@ -89,10 +92,11 @@ export async function getBooks(options: GetBooksOptions = {}) {
 
     const Book = await getBookModel()
 
-    if (limit > 4) limit = 4;
+    if (limit > 6) limit = 6;
     if (page < 0) page = 1;
 
     const skip = (Number(page) - 1) * Number(limit)
+    query.bookStatus = 'available';
 
 
 

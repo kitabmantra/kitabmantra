@@ -20,6 +20,7 @@ import toast from "react-hot-toast"
 import { BookCard } from "./BookCard" // Assuming BookCard.tsx exists and is styled
 import type { BookForStore } from "@/lib/types/books"
 import { Spinner } from "@/components/elements/common/spinner/spinner"
+import { Card } from "@/components/ui/card"
 
 
 
@@ -117,6 +118,29 @@ export default function MyListingsPage() {
     }))
   }
 
+  // Generate visible page numbers with window around current page
+  const getVisiblePages = () => {
+    const visiblePages = [];
+    const windowSize = 2; // Number of pages to show on each side of current
+    
+    let startPage = Math.max(1, currentPage - windowSize);
+    let endPage = Math.min(totalPages, currentPage + windowSize);
+
+    // Adjust if we're at the start or end
+    if (currentPage <= windowSize + 1) {
+      endPage = Math.min(2 * windowSize + 1, totalPages);
+    }
+    if (currentPage >= totalPages - windowSize) {
+      startPage = Math.max(1, totalPages - 2 * windowSize);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      visiblePages.push(i);
+    }
+
+    return visiblePages;
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#F9FAFB]">
       <div className="py-3 px-2 h-full">
@@ -174,7 +198,32 @@ export default function MyListingsPage() {
               {userBooksLoading || isFetching ? (
                 <div className="grid mt-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 my-2 max-h-[650px] md:h-[630px] lg:h-[650px] overflow-y-auto xl:grid-cols-5 gap-y-5 gap-x-3">
                   {Array.from({ length: itemsPerPage }).map((_, i) => (
-                    <Skeleton key={i} className="w-[280px] h-[300px] rounded-lg bg-[#F9FAFB]" />
+                    <Card key={i} className="w-[280px] h-[300px] border-slate-200 overflow-hidden">
+                      <div className="h-48 w-full bg-slate-100">
+                        <Skeleton className="h-full w-full" />
+                      </div>
+                      <div className="p-3 space-y-2">
+                        <div className="space-y-1">
+                          <Skeleton className="h-4 w-3/4" />
+                          <Skeleton className="h-3 w-1/2" />
+                        </div>
+                        <div className="flex gap-1">
+                          <Skeleton className="h-5 w-16" />
+                          <Skeleton className="h-5 w-16" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-3 w-3" />
+                          <Skeleton className="h-3 w-20" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-3 w-3" />
+                          <Skeleton className="h-3 w-20" />
+                        </div>
+                      </div>
+                      <div className="px-3 pb-3 pt-1 border-t border-slate-200">
+                        <Skeleton className="h-4 w-20" />
+                      </div>
+                    </Card>
                   ))}
                 </div>
               ) : userBooks?.books && userBooks.books.length > 0 ? (
@@ -216,53 +265,129 @@ export default function MyListingsPage() {
 
         <div className="flex justify-center md:mt-2 lg:mt-4">
           {totalPages > 1 && (
-            <div className="max-w-xl bg-white/20 rounded-xl shadow-sm py-1">
-              <div className="flex justify-center">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          if (!isFirstPage && !userBooksLoading && !isFetching) {
-                            handlePageChange(currentPage - 1)
-                          }
-                        }}
-                        className={isFirstPage || userBooksLoading || isFetching ? "pointer-events-none opacity-50" : ""}
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            if (!userBooksLoading && !isFetching) {
-                              handlePageChange(page)
-                            }
-                          }}
-                          isActive={page === currentPage}
-                          className={userBooksLoading || isFetching ? "pointer-events-none opacity-50" : ""}
-                        >
-                          {page}
-                        </PaginationLink>
+            <div className="w-full max-w-4xl bg-white/90 backdrop-blur-sm border-t border-slate-200 py-4">
+              <div className="container mx-auto px-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  {/* Page info */}
+                  <div className="text-sm text-slate-600">
+                    {userBooksLoading || isFetching ? (
+                      <Skeleton className="h-4 w-48" />
+                    ) : (
+                      `Page ${currentPage} of ${totalPages} • ${totalBooks} items total`
+                    )}
+                  </div>
+                  
+                  {/* Pagination controls */}
+                  <Pagination className="mx-0">
+                    <PaginationContent>
+                      <PaginationItem>
+                        <div className={isFirstPage || userBooksLoading || isFetching ? "pointer-events-none opacity-50" : ""}>
+                          <PaginationPrevious
+                            className="w-24 border border-slate-200 hover:bg-slate-100"
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (!isFirstPage && !userBooksLoading && !isFetching) {
+                                handlePageChange(currentPage - 1);
+                              }
+                            }}
+                          >
+                            Previous
+                          </PaginationPrevious>
+                        </div>
                       </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                      <PaginationNext
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          if (!isLastPage && !userBooksLoading && !isFetching) {
-                            handlePageChange(currentPage + 1)
-                          }
-                        }}
-                        className={isLastPage || userBooksLoading || isFetching ? "pointer-events-none opacity-50" : ""}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+
+                      {/* First page */}
+                      {currentPage > 3 && totalPages > 5 && (
+                        <PaginationItem>
+                          <PaginationLink
+                            className="border border-slate-200 hover:bg-slate-100"
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (!userBooksLoading && !isFetching) {
+                                handlePageChange(1);
+                              }
+                            }}
+                          >
+                            1
+                          </PaginationLink>
+                        </PaginationItem>
+                      )}
+
+                      {/* Ellipsis if needed */}
+                      {currentPage > 4 && totalPages > 5 && (
+                        <PaginationItem>
+                          <span className="px-3 py-2">...</span>
+                        </PaginationItem>
+                      )}
+
+                      {/* Dynamic page numbers */}
+                      {getVisiblePages().map((pageNum) => (
+                        <PaginationItem key={pageNum}>
+                          <PaginationLink
+                            className={`border ${
+                              currentPage === pageNum 
+                                ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700' 
+                                : 'border-slate-200 hover:bg-slate-100'
+                            }`}
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (!userBooksLoading && !isFetching) {
+                                handlePageChange(pageNum);
+                              }
+                            }}
+                          >
+                            {pageNum}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+
+                      {/* Ellipsis if needed */}
+                      {currentPage < totalPages - 3 && totalPages > 5 && (
+                        <PaginationItem>
+                          <span className="px-3 py-2">...</span>
+                        </PaginationItem>
+                      )}
+
+                      {/* Last page */}
+                      {currentPage < totalPages - 2 && totalPages > 5 && (
+                        <PaginationItem>
+                          <PaginationLink
+                            className="border border-slate-200 hover:bg-slate-100"
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (!userBooksLoading && !isFetching) {
+                                handlePageChange(totalPages);
+                              }
+                            }}
+                          >
+                            {totalPages}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )}
+
+                      <PaginationItem>
+                        <div className={isLastPage || userBooksLoading || isFetching ? "pointer-events-none opacity-50" : ""}>
+                          <PaginationNext
+                            className="w-24 border border-slate-200 hover:bg-slate-100"
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (!isLastPage && !userBooksLoading && !isFetching) {
+                                handlePageChange(currentPage + 1);
+                              }
+                            }}
+                          >
+                            Next
+                          </PaginationNext>
+                        </div>
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
               </div>
             </div>
           )}

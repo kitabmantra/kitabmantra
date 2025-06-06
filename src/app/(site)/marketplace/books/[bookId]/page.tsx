@@ -3,6 +3,7 @@ import { getAllBooks } from '@/lib/actions/books/get/getAllBooks'
 import { getOneBook } from '@/lib/actions/books/get/getOneBook'
 import { Metadata } from 'next'
 import React from 'react'
+
 type Params = Promise<{ bookId: string }>
 
 export const revalidate = 60;
@@ -18,19 +19,21 @@ export async function generateStaticParams() {
     );
 }
 
+
 export async function generateMetadata(props: { params: Params }): Promise<Metadata> {
     const params = await props.params
-    const bookId = params.bookId
-    const { formattedBook:bookString } = await getOneBook({ bookId })
-    const formattedBook = JSON.parse(bookString as string);
+    const { formattedBook: bookString } = await getOneBook({ bookId: params.bookId })
+    const formattedBook = JSON.parse(bookString as string)
 
     return {
-        title: formattedBook?.title,
-        description: formattedBook?.description,
+        title: formattedBook?.title || 'Book Not Found',
+        description: formattedBook?.description || 'No description available',
         openGraph: {
+            title: formattedBook?.title || 'Book Not Found',
+            description: formattedBook?.description || 'No description available',
             images: [
                 {
-                    url: "./opengraph-image.png",
+                    url: formattedBook?.coverImage || "./opengraph-image.png",
                 }
             ]
         }
@@ -39,8 +42,8 @@ export async function generateMetadata(props: { params: Params }): Promise<Metad
 
 const Page = async (props: { params: Params }) => {
     const params = await props.params
-    const bookId = params.bookId
-    const { success, formattedBook } = await getOneBook({ bookId })
+    const { success, formattedBook } = await getOneBook({ bookId: params.bookId })
+    
     return <Book book={formattedBook} success={success} />
 }
 

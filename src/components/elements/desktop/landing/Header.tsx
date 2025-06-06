@@ -2,8 +2,8 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Menu, X, User } from "lucide-react"
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
+import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -20,18 +20,6 @@ export default function Header() {
     const { data: session, refetch } = useGetUserFromSession()
     
     const [isMenuOpen, setIsMenuOpen] = useState(false)
-    const [scrolled, setScrolled] = useState(false)
-    const { scrollY } = useScroll()
-    const headerOpacity = useTransform(scrollY, [0, 100], [0, 1])
-    const headerY = useTransform(scrollY, [0, 100], [-20, 0])
-
-    useEffect(() => {
-        const handleScroll = () => {
-            setScrolled(window.scrollY > 20)
-        }
-        window.addEventListener("scroll", handleScroll)
-        return () => window.removeEventListener("scroll", handleScroll)
-    }, [])
 
     const getDashboardLink = () => {
         if (!session) return "/login"
@@ -65,15 +53,7 @@ export default function Header() {
     }
 
     return (
-        <motion.header 
-            style={{ 
-                opacity: headerOpacity,
-                y: headerY,
-                backgroundColor: scrolled ? 'rgba(255, 255, 255, 0.95)' : 'transparent',
-                backdropFilter: scrolled ? 'blur(10px)' : 'none'
-            }}
-            className="fixed top-0 z-50 w-full transition-all duration-300"
-        >
+        <header className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-sm border-b border-slate-200">
             <div className="container mx-auto px-4 md:px-6">
                 <div className="flex h-20 items-center justify-between">
                     <motion.div
@@ -333,6 +313,6 @@ export default function Header() {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </motion.header>
+        </header>
     )
 }
