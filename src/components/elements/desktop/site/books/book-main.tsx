@@ -142,7 +142,7 @@ function BookMainPage() {
         <div className="flex-1">
           {(dataLoading || isFetching) ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-5 gap-4">
-              {Array.from({ length: itemPerPage }).map((_, i) => (
+              {Array.from({ length: 10 }).map((_, i) => (
                 <Card key={i} className="w-[280px] h-[300px] border-slate-200 overflow-hidden">
                   <div className="h-48 w-full bg-slate-100">
                     <Skeleton className="h-full w-full" />
