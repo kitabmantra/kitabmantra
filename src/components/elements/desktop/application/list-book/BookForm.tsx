@@ -286,12 +286,10 @@ export default function BookForm({ userId }: PostBookPageProps) {
         if(response.success && response.result){
           const {author, description, title, category} = response.result;
           
-          // Set basic fields
           form.setValue("author", author ?? "");
           form.setValue("description", description ?? "");
           form.setValue("title", title ?? "");
           
-          // Set category fields and trigger tab change
           if (category.level) {
             form.setValue("category.level", category.level);
             setTimeout(() => {
@@ -301,7 +299,6 @@ export default function BookForm({ userId }: PostBookPageProps) {
             }, 0);
           }
 
-          // Add the selected image to the form only if extraction was successful
           setFiles(prev => [...prev, selectedFile]);
           const reader = new FileReader();
           reader.onloadend = () => {
@@ -315,16 +312,9 @@ export default function BookForm({ userId }: PostBookPageProps) {
           throw new Error("Failed to extract book information");
         }
       } catch (error: any) {
-        if (error.message?.includes('No book is found')) {
-          toast.error("This image doesn't appear to be a book cover. Please upload a clear image of a book cover.");
-        } else {
-          toast.error(error.message || "Failed to extract book information");
-        }
-        // Don't add the failed image to the form, but keep existing images
-        // No need to modify files or previewUrls as we haven't added the new image yet
+        toast.error("Failed to extract book information");
       }
   }
-  console.log("forms values : ",form.getValues())
 
   return (
     <div className="min-h-screen w-full bg-[#F9FAFB]">

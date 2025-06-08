@@ -101,13 +101,8 @@ export default function ImageAnalyzer({ handleDataFromAi, isGenerating }: ImageA
             reader.onerror = () => {
                 throw new Error("Failed to read image file");
             };
-        } catch (err: any) {
-            if (err.message?.includes('No book is found')) {
-                toast.error("This image doesn't appear to be a book cover. Please upload a clear image of a book cover.");
-            } else {
-                toast.error(err.message || 'Failed to analyze image');
-            }
-            console.error('Analysis error:', err);
+        } catch (err) {
+            toast.error("failed to analyze image");
         }
     };
 
