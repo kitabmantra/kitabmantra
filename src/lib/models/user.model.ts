@@ -48,6 +48,8 @@ const userSchema = new Schema({
     }
 }, { collection: 'users' })
 
+userSchema.index({ userId: 1, email: 1, userName: 1 }, { unique: true });
+
 export const User = {
     schema: userSchema,
     model: mongoose.models.User || mongoose.model("User", userSchema)

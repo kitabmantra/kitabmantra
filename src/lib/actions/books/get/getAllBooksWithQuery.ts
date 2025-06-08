@@ -121,15 +121,7 @@ export async function getBooks(options: GetBooksOptions = {}) {
       updatedAt: book.updatedAt?.toISOString()
     }));
 
-    console.log("this is hte data ;", {
-      success: true,
-      books: JSON.stringify(bookToBeSent),
-      totalBooks,
-      totalPages,
-      currentPage: Number(page),
-      hasNextPage,
-      limit: Number(limit)
-    })
+ 
 
     return {
       success: true,

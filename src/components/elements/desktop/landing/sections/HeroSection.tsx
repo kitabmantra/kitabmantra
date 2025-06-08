@@ -14,7 +14,7 @@ export function HeroSection() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.15 }}
-        transition={{ duration: 1.5, delay: 0.2 }}
+        transition={{ duration: 0.8, delay: 0.1 }}
         style={{ y: bgY }}
         className="absolute inset-0 z-0 overflow-hidden"
       >
@@ -31,7 +31,7 @@ export function HeroSection() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.7 }}
-        transition={{ duration: 1.5, delay: 0.2 }}
+        transition={{ duration: 0.8, delay: 0.1 }}
         style={{ y: bgY }}
         className="absolute inset-0 z-0 overflow-hidden"
       >
@@ -45,7 +45,7 @@ export function HeroSection() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
           className="absolute inset-0 bg-[url('/abstract-pattern.png')] bg-repeat opacity-5"
         />
       </motion.div>
@@ -53,16 +53,16 @@ export function HeroSection() {
       <div className="container relative z-10 px-4 py-12 md:px-6 md:py-24 lg:py-32">
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-12">
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
+            initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
             className="flex flex-col justify-center space-y-8 max-w-xl"
           >
             <div className="space-y-6">
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.6 }}
+                transition={{ delay: 0.1, duration: 0.4 }}
                 className="inline-block"
               >
                 <motion.span
@@ -77,26 +77,26 @@ export function HeroSection() {
                 </motion.span>
               </motion.div>
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.6 }}
+                transition={{ delay: 0.2, duration: 0.4 }}
                 className="space-y-4"
               >
                 <h1 className="text-5xl font-bold tracking-tighter text-[#1E3A8A] sm:text-6xl md:text-7xl lg:text-8xl">
                   Discover Your Next
                   <motion.span
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6, duration: 0.6 }}
+                    transition={{ delay: 0.3, duration: 0.4 }}
                     className="block bg-gradient-to-r from-[#1E3A8A] to-[#0D9488] bg-clip-text text-transparent"
                   >
                     Favorite Book
                   </motion.span>
                 </h1>
                 <motion.p
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8, duration: 0.6 }}
+                  transition={{ delay: 0.4, duration: 0.4 }}
                   className="text-xl text-[#4B5563] md:text-2xl"
                 >
                   Explore our vast collection of bestsellers, classics, and hidden gems. Your literary journey begins here.
@@ -104,9 +104,9 @@ export function HeroSection() {
               </motion.div>
             </div>
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1, duration: 0.6 }}
+              transition={{ delay: 0.5, duration: 0.4 }}
               className="flex flex-col gap-4 min-[400px]:flex-row"
             >
               <Link href="/marketplace">
@@ -126,16 +126,16 @@ export function HeroSection() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1.2, duration: 0.6 }}
+              transition={{ delay: 0.6, duration: 0.4 }}
               className="flex items-center gap-6 pt-4"
             >
               <div className="flex -space-x-3">
                 {[1, 2, 3].map((i) => (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, x: -20 }}
+                    initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 1.2 + i * 0.1, duration: 0.6 }}
+                    transition={{ delay: 0.6 + i * 0.05, duration: 0.4 }}
                     className="w-10 h-10 rounded-full border-2 border-white bg-gradient-to-br from-[#1E3A8A]/20 to-[#0D9488]/20 flex items-center justify-center"
                     whileHover={{
                       scale: 1.1,
@@ -152,9 +152,9 @@ export function HeroSection() {
             </motion.div>
           </motion.div>
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
             className="hidden lg:flex items-center justify-end"
           >
             <motion.div
@@ -184,7 +184,7 @@ export function HeroSection() {
                 className="absolute inset-0 rounded-3xl bg-gradient-to-t from-[#1E3A8A]/10 to-transparent"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
+                transition={{ delay: 0.3 }}
               />
             </motion.div>
           </motion.div>
@@ -193,7 +193,7 @@ export function HeroSection() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.4 }}
+        transition={{ delay: 0.7 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2"
       >
         <motion.div
