@@ -15,7 +15,6 @@ export const BookFormValidation = z.object({
     message: "At least one image URL is required",
   }),
   
-
   category: z.object({
     level: z.enum(bookCategoryLevel, {
       errorMap: () => ({ message: "Please select a valid category level" }),
@@ -23,6 +22,26 @@ export const BookFormValidation = z.object({
     faculty: z.string().optional(),
     year: z.string().optional(),
     class: z.string().optional(),
+  }).refine((data) => {
+    // School level validation
+    if (data.level === "school" && !data.class) {
+      return false;
+    }
+    // High school level validation
+    if (data.level === "highschool" && (!data.class || !data.faculty)) {
+      return false;
+    }
+    // Bachelors and Masters level validation
+    if ((data.level === "bachelors" || data.level === "masters") && (!data.faculty || !data.year)) {
+      return false;
+    }
+    // Exam level validation
+    if (data.level === "exam" && !data.faculty) {
+      return false;
+    }
+    return true;
+  }, {
+    message: "Please fill in all required category fields",
   }),
 
   type: z.enum(bookType, {
@@ -35,10 +54,6 @@ export const BookFormValidation = z.object({
     lon: z.number().optional(),
   }),
 });
-
-
-
-
 
 export const EditBookFormValidation = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters" }),
@@ -64,6 +79,26 @@ export const EditBookFormValidation = z.object({
     faculty: z.string().optional(),
     year: z.string().optional(),
     class: z.string().optional(),
+  }).refine((data) => {
+    // School level validation
+    if (data.level === "school" && !data.class) {
+      return false;
+    }
+    // High school level validation
+    if (data.level === "highschool" && (!data.class || !data.faculty)) {
+      return false;
+    }
+    // Bachelors and Masters level validation
+    if ((data.level === "bachelors" || data.level === "masters") && (!data.faculty || !data.year)) {
+      return false;
+    }
+    // Exam level validation
+    if (data.level === "exam" && !data.faculty) {
+      return false;
+    }
+    return true;
+  }, {
+    message: "Please fill in all required category fields",
   }),
 
   type: z.enum(bookType, {

@@ -1,7 +1,6 @@
 /*eslint-disable*/
 "use client"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -53,6 +52,9 @@ export default function BookForm({ userId }: PostBookPageProps) {
       imageUrl: [],
       category: {
         level: "school",
+        faculty: "",
+        year: "",
+        class: "",
       },
       type: "Free",
       location: {
@@ -172,131 +174,36 @@ export default function BookForm({ userId }: PostBookPageProps) {
     }
   }
 
-  async function handleSubmit() {
-    let deleteImageOnError: string[] = []
-    setIsSubmitting(true)
-    try {
-      const validationResult = await form.trigger();
-      if (!validationResult) {
-        toast.error("Please fill in all required fields correctly");
-        setIsSubmitting(false);
-        return;
-      }
-      const level = form.getValues("category.level");
-      const category = form.getValues("category");
-
-      if (level === "school" && !category.class) {
-        toast.error("Please select a class for school level");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (level === "highschool" && (!category.class || !category.faculty)) {
-        toast.error("Please select both class and faculty for high school level");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if ((level === "bachelors" || level === "masters") && (!category.faculty || !category.year)) {
-        toast.error("Please select both faculty and year for " + level);
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (level === "exam" && !category.faculty) {
-        toast.error("Please select an exam type");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (files.length === 0) {
-        toast.error("Please upload at least one image");
-        setIsSubmitting(false);
-        return;
-      }
-
-      let uploadedImages: string[] = []
-      const values = form.getValues();
-
-      if (files.length > 0) {
-        try {
-          const uploadResults = await startUpload(files);
-          if (uploadResults) {
-            uploadedImages = uploadResults.map((result) => result.ufsUrl);
-            deleteImageOnError = uploadedImages;
-          }
-        } catch (uploadError) {
-          console.error("Error uploading images:", uploadError);
-          toast.error("Failed to upload images. Please try again.");
-          return;
-        }
-      }
-
-      const bookData: CreateBook = {
-        userId: userId,
-        title: values.title,
-        author: values.author,
-        description: values.description,
-        price: values.type === "Sell" ? values.price : 0,
-        condition: values.condition,
-        imageUrl: uploadedImages,
-        category: values.category,
-        type: values.type,
-        location: {
-          address: values.location.address,
-          lat: values.location.lat,
-          lon: values.location.lon,
-        },
-      }
-
-      console.log(bookData)
-      const response = await createBook({ bookData })
-      if (response?.success) {
-        form.reset()
-        setFiles([])
-        setPreviewUrls([])
-        toast.success("Book Listed successfully!..")
-      } else {
-        toast.error("Failed to list the book. Please try again.")
-      }
-    } catch (error) {
-      await removeMultipleImages(deleteImageOnError)
-      deleteImageOnError = []
-      console.error("Error submitting form:", error)
-      toast.error("An error occurred while listing the book")
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const getLevelName = (level: string) => {
-    const names: Record<string, string> = {
-      school: "School (1-10)",
-      highschool: "High School (11-12)",
-      bachelors: "Bachelor's",
-      masters: "Master's",
-      exam: "Exam Preparation",
-    }
-    return names[level] || level
-  }
-
   const handleDataFromAi = async(base64Image: string, selectedFile: File) => {
       try {
         const response = await extractDataFromImage(base64Image);
         if(response.success && response.result){
           const {author, description, title, category} = response.result;
           
-          form.setValue("author", author ?? "");
-          form.setValue("description", description ?? "");
-          form.setValue("title", title ?? "");
+          form.setValue("author", author || "");
+          form.setValue("description", description || "");
+          form.setValue("title", title || "");
           
-          if (category.level) {
+          if (category?.level) {
             form.setValue("category.level", category.level);
+            
+            form.setValue("category.faculty", "");
+            form.setValue("category.year", "");
+            form.setValue("category.class", "");
+            
             setTimeout(() => {
-              if (category.class) form.setValue("category.class", category.class);
-              if (category.faculty) form.setValue("category.faculty", category.faculty);
-              if (category.year) form.setValue("category.year", category.year);
-            }, 0);
+              if (category.class) {
+                form.setValue("category.class", category.class);
+              }
+              if (category.faculty) {
+                form.setValue("category.faculty", category.faculty);
+              }
+              if (category.year) {
+                form.setValue("category.year", category.year);
+              }
+              
+              form.trigger("category");
+            }, 100);
           }
 
           setFiles(prev => [...prev, selectedFile]);
@@ -315,6 +222,149 @@ export default function BookForm({ userId }: PostBookPageProps) {
         toast.error("Failed to extract book information");
       }
   }
+  async function handleSubmit() {
+    let deleteImageOnError: string[] = []
+    setIsSubmitting(true)
+    try {
+      const currentValues = form.getValues();
+      
+      // First validate everything except images
+      const validationResult = await form.trigger([
+        "title",
+        "author",
+        "description",
+        "price",
+        "condition",
+        "category",
+        "type",
+        "location"
+      ]);
+      
+      if (!validationResult) {
+        console.log("Form validation failed. Errors:", form.formState.errors);
+        toast.error("Please fill in all required fields correctly");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (files.length === 0) {
+        toast.error("Please upload at least one image");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const level = currentValues.category.level;
+      const category = currentValues.category;
+      let categoryValid = true;
+      let categoryErrors = [];
+
+      if (level === "school" && !category.class) {
+        form.setError("category.class", { message: "Class is required for school level" });
+        categoryErrors.push("Class is required for school level");
+        categoryValid = false;
+      }
+
+      if (level === "highschool" && (!category.class || !category.faculty)) {
+        if (!category.class) {
+          form.setError("category.class", { message: "Class is required" });
+          categoryErrors.push("Class is required");
+        }
+        if (!category.faculty) {
+          form.setError("category.faculty", { message: "Faculty is required" });
+          categoryErrors.push("Faculty is required");
+        }
+        categoryValid = false;
+      }
+
+      if ((level === "bachelors" || level === "masters") && (!category.faculty || !category.year)) {
+        if (!category.faculty) {
+          form.setError("category.faculty", { message: "Faculty is required" });
+          categoryErrors.push("Faculty is required");
+        }
+        if (!category.year) {
+          form.setError("category.year", { message: "Year is required" });
+          categoryErrors.push("Year is required");
+        }
+        categoryValid = false;
+      }
+
+      if (level === "exam" && !category.faculty) {
+        form.setError("category.faculty", { message: "Exam type is required" });
+        categoryErrors.push("Exam type is required");
+        categoryValid = false;
+      }
+
+      if (!categoryValid) {
+        console.log("Category validation failed:", {
+          level,
+          category,
+          errors: categoryErrors
+        });
+        toast.error("Please fill in all required category fields");
+        setIsSubmitting(false);
+        return;
+      }
+
+      let uploadedImages: string[] = []
+      try {
+        const uploadResults = await startUpload(files);
+        if (uploadResults) {
+          uploadedImages = uploadResults.map((result) => result.ufsUrl);
+          deleteImageOnError = uploadedImages;
+        }
+      } catch (uploadError) {
+        console.error("Error uploading images:", uploadError);
+        toast.error("Failed to upload images. Please try again.");
+        return;
+      }
+
+      form.setValue("imageUrl", uploadedImages);
+      const finalValidation = await form.trigger("imageUrl");
+      
+      if (!finalValidation) {
+        console.log("Image validation failed:", form.formState.errors);
+        toast.error("Failed to validate uploaded images");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const bookData: CreateBook = {
+        userId: userId,
+        title: currentValues.title,
+        author: currentValues.author,
+        description: currentValues.description,
+        price: currentValues.type === "Sell" ? currentValues.price : 0,
+        condition: currentValues.condition,
+        imageUrl: uploadedImages,
+        category: currentValues.category,
+        type: currentValues.type,
+        location: {
+          address: currentValues.location.address,
+          lat: currentValues.location.lat,
+          lon: currentValues.location.lon,
+        },
+      }
+
+      console.log("Submitting book data:", bookData);
+      const response = await createBook({ bookData })
+      if (response?.success) {
+        form.reset()
+        setFiles([])
+        setPreviewUrls([])
+        toast.success("Book Listed successfully!..")
+      } else {
+        toast.error("Failed to list the book. Please try again.")
+      }
+    } catch (error) {
+      await removeMultipleImages(deleteImageOnError)
+      deleteImageOnError = []
+      console.error("Error submitting form:", error)
+      toast.error("An error occurred while listing the book")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+  
 
   return (
     <div className="min-h-screen w-full bg-[#F9FAFB]">

@@ -5,7 +5,7 @@ import {
   bachelorsFaculty,
   bookCategoryLevel,
   examFaculty,
-  highLevelFaculty,
+highLevelFaculty,
   mastersFaculty,
 } from "@/lib/utils/data"
 import { UseFormReturn } from "react-hook-form"
