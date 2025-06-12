@@ -16,10 +16,9 @@ declare type BookStatusType = typeof bookStatus[number];
 
 
 declare type LocationType = {
-    address: string,
-    lat?: number,
-    lon?: number
-}
+    address: string;
+    coordinates?: [number, number];
+  };
 
 
 declare type Book = {

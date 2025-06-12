@@ -34,7 +34,6 @@ import { useForm } from "react-hook-form"
 import toast from "react-hot-toast"
 import { z } from "zod"
 
-type BookFormValues = z.infer<typeof EditBookFormValidation>
 
 interface BookEditFormProps {
   initialData: PublicBook
@@ -46,11 +45,12 @@ export function BookEditForm({ initialData }: BookEditFormProps) {
   const [newImages, setNewImages] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
   const [removedServerImages, setRemovedServerImages] = useState<string[]>([])
+  const [showCoordinates, setShowCoordinates] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { startUpload } = useUploadThing("imageUploader")
   const router = useRouter();
 
-  const form = useForm<BookFormValues>({
+  const form = useForm<z.infer<typeof EditBookFormValidation>>({
     resolver: zodResolver(EditBookFormValidation),
     defaultValues: {
       title: initialData.title,
@@ -58,7 +58,7 @@ export function BookEditForm({ initialData }: BookEditFormProps) {
       description: initialData.description,
       price: initialData.price,
       condition: initialData.condition,
-      bookStatus : initialData.bookStatus,
+      bookStatus: initialData.bookStatus,
       type: initialData.type,
       category: {
         level: initialData.category.level,
@@ -66,9 +66,18 @@ export function BookEditForm({ initialData }: BookEditFormProps) {
         year: initialData.category.year || "",
         class: initialData.category.class || "",
       },
-      location: initialData.location,
+      location: {
+        address: initialData.location.address,
+        coordinates: initialData.location.coordinates ? [initialData.location.coordinates[0], initialData.location.coordinates[1]] as [number, number] : undefined,
+      },
     },
   })
+
+  useEffect(() => {
+    if (initialData.location.coordinates) {
+      setShowCoordinates(true);
+    }
+  }, [initialData.location.coordinates]);
 
   console.log("this is new files : ",newImages)
   console.log("this is server Images : ",serverImages)
@@ -145,7 +154,60 @@ export function BookEditForm({ initialData }: BookEditFormProps) {
     setPreviewUrls(prev => prev.filter((_, i) => i !== index))
   }
 
-  const handleAutoLocation = () => {
+  const handleAutoLocation = async () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser.")
+      return
+    }
+
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        })
+      })
+
+      const latitude = position.coords.latitude
+      const longitude = position.coords.longitude
+
+      let address = "Current location"
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+        )
+        const data = await response.json()
+        if (data.display_name) {
+          address = data.display_name
+        }
+      } catch (error) {
+        console.error("Error getting address from coordinates:", error)
+      }
+
+      form.setValue("location", {
+        address,
+        coordinates: [latitude, longitude] as [number, number],
+      })
+      setShowCoordinates(true)
+      toast.success("Location set successfully!")
+    } catch (error) {
+      console.error("Error getting location:", error)
+      toast.error("Failed to get your location. Please enter it manually.")
+    }
+  }
+
+  const handleCoordinateChange = (type: 'lat' | 'lon', value: string) => {
+    const currentLocation = form.getValues("location");
+    const coordinates = currentLocation.coordinates || [0, 0] as [number, number];
+    
+    if (type === 'lat') {
+      coordinates[0] = parseFloat(value) || 0;
+    } else {
+      coordinates[1] = parseFloat(value) || 0;
+    }
+    
+    form.setValue("location.coordinates", coordinates as [number, number]);
   }
 
   const handleFormSubmit = async () => {
@@ -175,7 +237,10 @@ export function BookEditForm({ initialData }: BookEditFormProps) {
         imageUrl: [...serverImages, ...newUploadedImage],
         category: values.category,
         type: values.type,
-        location: values.location,
+        location: {
+          address: values.location.address,
+          coordinates: values.location.coordinates ? [values.location.coordinates[0], values.location.coordinates[1]] as [number, number] : undefined,
+        },
         bookStatus: values.bookStatus,
       }
 
@@ -532,50 +597,6 @@ export function BookEditForm({ initialData }: BookEditFormProps) {
                         )}
                       />
 
-                      <div className="flex items-center gap-4">
-                        <FormField
-                          control={form.control}
-                          name="location.lat"
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormLabel className="text-[#1E3A8A] font-medium">Latitude</FormLabel>
-                              <FormControl>
-                                <Input
-                                  disabled={isSubmitting}
-                                  placeholder="Latitude"
-                                  {...field}
-                                  value={field.value || ""}
-                                  className="border-[#1E3A8A] focus:border-[#0D9488] focus:ring-[#0D9488] bg-white"
-                                  readOnly
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="location.lon"
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormLabel className="text-[#1E3A8A] font-medium">Longitude</FormLabel>
-                              <FormControl>
-                                <Input
-                                  disabled={isSubmitting}
-                                  placeholder="Longitude"
-                                  {...field}
-                                  value={field.value || ""}
-                                  className="border-[#1E3A8A] focus:border-[#0D9488] focus:ring-[#0D9488] bg-white"
-                                  readOnly
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
                       <Button
                         onClick={handleAutoLocation}
                         variant="outline"
@@ -585,8 +606,56 @@ export function BookEditForm({ initialData }: BookEditFormProps) {
                       >
                         Use Current Location
                       </Button>
-                      {form.watch("location.lat") && form.watch("location.lon") && (
-                        <FormDescription className="text-[#059669]">Location coordinates have been set</FormDescription>
+
+                      {showCoordinates && (
+                        <>
+                          <div className="flex items-center gap-4 mt-4">
+                            <FormField
+                              control={form.control}
+                              name="location.coordinates.0"
+                              render={({ field }) => (
+                                <FormItem className="flex-1">
+                                  <FormLabel className="text-[#1E3A8A] font-medium">Latitude</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      step="any"
+                                      disabled={isSubmitting}
+                                      placeholder="Latitude"
+                                      value={field.value || ""}
+                                      onChange={(e) => handleCoordinateChange('lat', e.target.value)}
+                                      className="border-[#1E3A8A] focus:border-[#0D9488] focus:ring-[#0D9488] bg-white"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="location.coordinates.1"
+                              render={({ field }) => (
+                                <FormItem className="flex-1">
+                                  <FormLabel className="text-[#1E3A8A] font-medium">Longitude</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      step="any"
+                                      disabled={isSubmitting}
+                                      placeholder="Longitude"
+                                      value={field.value || ""}
+                                      onChange={(e) => handleCoordinateChange('lon', e.target.value)}
+                                      className="border-[#1E3A8A] focus:border-[#0D9488] focus:ring-[#0D9488] bg-white"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <FormDescription className="text-green-600">Location coordinates have been set. You can edit them if needed.</FormDescription>
+                        </>
                       )}
                     </div>
                   </div>

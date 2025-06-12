@@ -120,9 +120,8 @@ const MBookForm = ({
       category: values.category,
       type: values.type,
       location: {
-        address : location,
-        lat : undefined,
-        lon : undefined
+        address: location,
+        coordinates: undefined
       },
     }
     console.log(bookData)

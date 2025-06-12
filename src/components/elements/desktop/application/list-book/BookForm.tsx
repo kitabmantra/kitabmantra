@@ -37,6 +37,7 @@ export default function BookForm({ userId }: PostBookPageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
+  const [showCoordinates, setShowCoordinates] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [open, setOpen] = useState(false);
   const { startUpload } = useUploadThing("imageUploader")
@@ -59,8 +60,7 @@ export default function BookForm({ userId }: PostBookPageProps) {
       type: "Free",
       location: {
         address: "",
-        lat: undefined,
-        lon: undefined,
+        coordinates: undefined,
       },
     },
   })
@@ -76,6 +76,10 @@ export default function BookForm({ userId }: PostBookPageProps) {
       }
       if (name === "type" && value.type !== "Sell") {
         form.setValue("price", 0)
+      }
+      if (name === "location.address" && !value.location?.address) {
+        form.setValue("location.coordinates", undefined)
+        setShowCoordinates(false)
       }
     })
     return () => subscription.unsubscribe()
@@ -163,15 +167,27 @@ export default function BookForm({ userId }: PostBookPageProps) {
 
       form.setValue("location", {
         address,
-        lat: latitude,
-        lon: longitude,
+        coordinates: [latitude, longitude] as [number, number],
       })
-
+      setShowCoordinates(true)
       toast.success("Location set successfully!")
     } catch (error) {
       console.error("Error getting location:", error)
       toast.error("Failed to get your location. Please enter it manually.")
     }
+  }
+
+  const handleCoordinateChange = (type: 'lat' | 'lon', value: string) => {
+    const currentLocation = form.getValues("location");
+    const coordinates = currentLocation.coordinates || [0, 0] as [number, number];
+    
+    if (type === 'lat') {
+      coordinates[0] = parseFloat(value) || 0;
+    } else {
+      coordinates[1] = parseFloat(value) || 0;
+    }
+    
+    form.setValue("location.coordinates", coordinates as [number, number]);
   }
 
   const handleDataFromAi = async(base64Image: string, selectedFile: File) => {
@@ -340,8 +356,7 @@ export default function BookForm({ userId }: PostBookPageProps) {
         type: currentValues.type,
         location: {
           address: currentValues.location.address,
-          lat: currentValues.location.lat,
-          lon: currentValues.location.lon,
+          coordinates: currentValues.location.coordinates as [number, number] | undefined,
         },
       }
 
@@ -351,6 +366,7 @@ export default function BookForm({ userId }: PostBookPageProps) {
         form.reset()
         setFiles([])
         setPreviewUrls([])
+        setShowCoordinates(false)
         toast.success("Book Listed successfully!..")
       } else {
         toast.error("Failed to list the book. Please try again.")
@@ -636,50 +652,6 @@ export default function BookForm({ userId }: PostBookPageProps) {
                         )}
                       />
 
-                      <div className="flex items-center gap-4">
-                        <FormField
-                          control={form.control}
-                          name="location.lat"
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormLabel className="text-[#1E3A8A] font-medium">Latitude</FormLabel>
-                              <FormControl>
-                                <Input
-                                  disabled={isSubmitting}
-                                  placeholder="Latitude"
-                                  {...field}
-                                  value={field.value || ""}
-                                  className="border-[#1E3A8A] focus:border-[#0D9488] focus:ring-[#0D9488] bg-white"
-                                  readOnly
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="location.lon"
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormLabel className="text-[#1E3A8A] font-medium">Longitude</FormLabel>
-                              <FormControl>
-                                <Input
-                                  disabled={isSubmitting}
-                                  placeholder="Longitude"
-                                  {...field}
-                                  value={field.value || ""}
-                                  className="border-[#1E3A8A] focus:border-[#0D9488] focus:ring-[#0D9488] bg-white"
-                                  readOnly
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
                       <Button
                         onClick={handleAutoLocation}
                         variant="outline"
@@ -689,8 +661,56 @@ export default function BookForm({ userId }: PostBookPageProps) {
                       >
                         Use Current Location
                       </Button>
-                      {form.watch("location.lat") && form.watch("location.lon") && (
-                        <FormDescription className="text-green-600">Location coordinates have been set</FormDescription>
+
+                      {showCoordinates && (
+                        <>
+                          <div className="flex items-center gap-4 mt-4">
+                            <FormField
+                              control={form.control}
+                              name="location.coordinates.0"
+                              render={({ field }) => (
+                                <FormItem className="flex-1">
+                                  <FormLabel className="text-[#1E3A8A] font-medium">Latitude</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      step="any"
+                                      disabled={isSubmitting}
+                                      placeholder="Latitude"
+                                      value={field.value || ""}
+                                      onChange={(e) => handleCoordinateChange('lat', e.target.value)}
+                                      className="border-[#1E3A8A] focus:border-[#0D9488] focus:ring-[#0D9488] bg-white"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="location.coordinates.1"
+                              render={({ field }) => (
+                                <FormItem className="flex-1">
+                                  <FormLabel className="text-[#1E3A8A] font-medium">Longitude</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      step="any"
+                                      disabled={isSubmitting}
+                                      placeholder="Longitude"
+                                      value={field.value || ""}
+                                      onChange={(e) => handleCoordinateChange('lon', e.target.value)}
+                                      className="border-[#1E3A8A] focus:border-[#0D9488] focus:ring-[#0D9488] bg-white"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <FormDescription className="text-green-600">Location coordinates have been set. You can edit them if needed.</FormDescription>
+                        </>
                       )}
                     </div>
                   </div>

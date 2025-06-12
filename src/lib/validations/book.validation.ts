@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { bookCategoryLevel, bookCondition, bookStatus, bookType } from "../utils/data";
 
+
+const coordinatesSchema = z
+  .array(z.number())
+  .length(2, { message: "Coordinates must contain exactly [longitude, latitude]" })
+  .optional();
+
 export const BookFormValidation = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters" }),
   author: z.string().min(2, { message: "Author must be at least 2 characters" }),
@@ -50,8 +56,7 @@ export const BookFormValidation = z.object({
 
   location: z.object({
     address: z.string().min(1, { message: "Address is required" }),
-    lat: z.number().optional(),
-    lon: z.number().optional(),
+    coordinates : coordinatesSchema
   }),
 });
 
@@ -107,7 +112,6 @@ export const EditBookFormValidation = z.object({
 
   location: z.object({
     address: z.string().min(1, { message: "Address is required" }),
-    lat: z.number().optional(),
-    lon: z.number().optional(),
+    coordinates: coordinatesSchema
   }),
 });

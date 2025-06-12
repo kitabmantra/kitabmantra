@@ -9,7 +9,7 @@ const Page = async () => {
   if (!session || !session?.user || !session.user?.id) redirect("/login");
   const user = await getUserFromId(session.user.id);
   //if already user is in db, user is already onbaorded
-  if (user) redirect("/dashboard");
+  if (user) redirect("/");
   return (
     <div className="min-h-screen min-w-screen w-full h-full ">
       <OnboardingForm session={session} />

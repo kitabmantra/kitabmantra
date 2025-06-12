@@ -1,4 +1,4 @@
-import { BarChart2, BookOpen, LayoutDashboard, ListChecks, MessageCircle, MessageSquare } from "lucide-react"
+import { BarChart2, BookOpen, LayoutDashboard, ListChecks, LucideActivity, MessageCircle, MessageSquare } from "lucide-react"
 
 type NavItem = {
     title: string
@@ -21,6 +21,11 @@ export const navItems: NavItem[] = [
         title: "My Listings",
         href: "/dashboard/my-listings",
         icon: ListChecks,
+    },
+    {
+        title: "My Activity",
+        href: "/dashboard/activity",
+        icon: LucideActivity,
     },
     {
         title: "Chats",

@@ -79,7 +79,7 @@ function OnboardingForm({ session }: { session: Session }) {
         const response = await createUser(userData)
         if (response.success && response.message) {
           toast.success(response.message)
-          router.push("/dashboard")
+          router.push("/")
         } else if (response.error) {
          toast.error(response.error as string)
         }

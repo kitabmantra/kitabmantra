@@ -40,11 +40,7 @@ export async function getBooks(options: GetBooksOptions = {}) {
 
 
     if (search && search.trim() != "") {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { author: { $regex: search, $options: 'i' } }
-      ]
+       query.$text =  {$search : search.trim()}
     }
     
 

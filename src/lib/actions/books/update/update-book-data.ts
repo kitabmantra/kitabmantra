@@ -3,6 +3,8 @@
 import { UpdateBook } from "@/lib/types/books"
 import { getCurrentUser } from "../../user/get/getCurrentUser"
 import { getBookModel } from "@/lib/hooks/database/get-book-model"
+import { revalidatePath } from "next/cache"
+
 interface UpdateBookType{
     bookData : UpdateBook
 }
@@ -37,8 +39,7 @@ export const updateBookData = async({bookData} : UpdateBookType) =>{
             type,
             location : {
                 address : location.address,
-                lat : location.lat,
-                lon : location.lon,
+                coordinates : location.coordinates,
             },
             bookStatus
         })
@@ -49,6 +50,8 @@ export const updateBookData = async({bookData} : UpdateBookType) =>{
                 error : "failed to update book data",
             }
         }
+        revalidatePath(`/dashboard/my-listings/${bookData.bookId}`)
+        revalidatePath(`/dashboard/my-listings`)
         return {
             success : true,
             message : "updated successfully"

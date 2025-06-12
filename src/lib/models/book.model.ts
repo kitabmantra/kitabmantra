@@ -3,16 +3,20 @@ import { bookCondition, bookStatus, bookType } from "../utils/data";
 
 export const bookSchema = new Schema({
     userId: {
-        type: String
+        type: String,
+        required : true,
     },
     title: {
         type: String,
+        required : true,
     },
     author: {
         type: String,
+        required : true,
     },
     description: {
         type: String,
+        required : true,
     },
     price: {
         type: Number,
@@ -33,7 +37,8 @@ export const bookSchema = new Schema({
     },
     category: {
         level: {
-            type: String
+            type: String,
+            required : true,
         },
         faculty: {
             type: String,
@@ -45,19 +50,33 @@ export const bookSchema = new Schema({
             type: String
         }
     },
+
     type: {
         type: String,
         enum: bookType,
         default: bookType[0],
     },
     location: {
-        address: {
-            type: String,
-            required: true,
+        type: {
+          type: String,
+          enum: ["Point"],
+          required: true,
+          default: "Point"
         },
-        lat: { type: Number },
-        lon: { type: Number }
-    },
+        coordinates: {
+          type: [Number], // [longitude, latitude]
+          validate: {
+            validator: function (val: number[]) {
+              return val.length === 2;
+            },
+            message: "Coordinates must be an array of two numbers: [longitude, latitude]",
+          }
+        },
+        address: {
+          type: String,
+          required: true,
+        }
+      },
     advertise: {
         type: Boolean,
         default: false,

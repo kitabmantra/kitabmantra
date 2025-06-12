@@ -3,6 +3,7 @@
 import { getBookModel } from "@/lib/hooks/database/get-book-model";
 import { getCurrentUser } from "../../user/get/getCurrentUser"
 import { BookStatusType } from "@/lib/types/books";
+import { revalidatePath } from "next/cache";
 
 export interface ChangeBookStatusType {
     id : string,
@@ -26,6 +27,8 @@ export  const ChangeBookStatus = async ( {id, status} : ChangeBookStatusType) =>
                 success : false
             }
         }
+        revalidatePath(`/dashboard/my-listings/${id}`)
+        revalidatePath(`/dashboard/my-listings`)
         return {
             success : true,
             message : "updated successfully"

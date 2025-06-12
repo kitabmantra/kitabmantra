@@ -2,13 +2,13 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { ArrowLeft, MessageSquare, ChevronLeft, ChevronRight, MapPin, Clock, BookOpen, User, Star, Shield, Eye } from 'lucide-react'
+import { ArrowLeft, MessageSquare, ChevronLeft, ChevronRight, MapPin, Clock, BookOpen, User, Star, Shield, Eye, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { formatDistanceToNow } from "date-fns"
 import { PublicBook } from '@/lib/types/books'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import {
@@ -16,6 +16,17 @@ import {
     DialogContent,
     DialogTrigger,
 } from "@/components/ui/dialog"
+import { useGetUserFromSession } from '@/lib/hooks/tanstack-query/query-hook/user/use-get-user-session'
+import { redirect } from 'next/navigation'
+import { useGetBookRequestStatus } from '@/lib/hooks/tanstack-query/query-hook/book/useGetBookRequestStatus'
+import { useCreateBookRequest } from '@/lib/hooks/tanstack-query/mutate-hook/books/use-create-book-request'
+import { useCancelBookRequest } from '@/lib/hooks/tanstack-query/mutate-hook/books/use-cancel-book-request'
+
+interface BookRequestStatus {
+    status: "booked" | "requested" | "not-booked";
+    message?: string;
+    error?: string;
+}
 
 interface BookProps {
     book: string | undefined
@@ -26,13 +37,38 @@ const Book = ({
     book: bookString,
     success
 }: BookProps) => {
-    if (!success) toast.error("Something went wrong!")
-    const book: PublicBook = JSON.parse(bookString as string);
-    const bookCategories = book.category
-    const lat = book.location.lat;
-    const lon = book.location.lon;
-    const [currentImageIndex, setCurrentImageIndex] = useState(0)
-    const images = book.imageUrl || []
+    const [isRefetching, setIsRefetching] = useState(false);
+    const {data : user, isLoading : userLoading } = useGetUserFromSession();
+    const {data : bookRequest, isLoading : bookRequestLoading, refetch} = useGetBookRequestStatus({
+        bookId : bookString ? JSON.parse(bookString).bookId : "",
+        userId : user?.userId || ""
+    }) as { data: BookRequestStatus | undefined, isLoading: boolean, refetch: () => Promise<unknown> };
+    const {mutate : create_bookrequest, isPending} = useCreateBookRequest();
+    const {mutate : cancel_booking, isPending : canceling} = useCancelBookRequest();
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    useEffect(() => {
+        if (userLoading) return;
+        if (user?.userId && !bookRequestLoading) {
+            setIsRefetching(true);
+            refetch().finally(() => {
+                setIsRefetching(false);
+            });
+        }
+    }, [userLoading, user?.userId, bookRequestLoading, refetch]);
+
+    if (!success) {
+        toast.error("Something went wrong!");
+        return null;
+    }
+    
+    if (!bookString) return null;
+    
+    const book: PublicBook = JSON.parse(bookString);
+    const bookCategories = book.category;
+    const coordinates = book.location.coordinates;
+    const address = book.location.address;
+    const images = book.imageUrl || [];
 
     const nextImage = () => {
         setCurrentImageIndex((prev) => (prev + 1) % images.length)
@@ -41,6 +77,110 @@ const Book = ({
     const prevImage = () => {
         setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length)
     }
+
+    const handleConnectWithOwner = () => {
+        if (!user) {
+            toast.error("Please login to request a book");
+            return redirect("/login");
+        }
+        
+        if (bookRequest?.status === "booked") {
+            toast.error("This book is already booked");
+            return;
+        }
+
+        create_bookrequest({
+            bookId : book.bookId
+        },
+        {
+            onSuccess : (res)=>{
+                if(res.message && res.success){
+                    toast.success('booked successfully')
+
+                }else if(res.error && !res.success){
+                    toast.error(res.error || "something went wrong")
+                }
+            },
+            onError : () =>{
+                toast.error("something went wrong")
+            }
+        }
+    )
+    }
+
+    const handleCancelBooking = () => {
+        if (!user) {
+            toast.error("Please login to cancel booking");
+            return redirect("/login");
+        }
+        if(canceling)return;
+
+        cancel_booking({
+            bookId: book.bookId
+        }, {
+            onSuccess: (res) => {
+                if (res.message && res.success) {
+                    toast.success('Booking cancelled successfully');
+                } else if (res.error && !res.success) {
+                    toast.error(res.error || "Something went wrong");
+                }
+            },
+            onError: () => {
+                toast.error("Something went wrong");
+            }
+        });
+    }
+
+    const getRequestButtonState = () => {
+        if (userLoading || bookRequestLoading || isRefetching) {
+            return {
+                text: "Loading...",
+                disabled: true,
+                className: "bg-gray-400 cursor-not-allowed",
+                icon: <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            };
+        }
+
+        if (!user) {
+            return {
+                text: "Login to Request",
+                disabled: false,
+                className: "bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-600",
+                icon: <MessageSquare className="mr-2 h-4 w-4" />
+            };
+        }
+
+        if (bookRequest?.status === "booked") {
+            return {
+                text: "Booked",
+                disabled: true,
+                className: "bg-gray-400 cursor-not-allowed",
+                icon: <Shield className="mr-2 h-4 w-4" />
+            };
+        }
+
+        if (bookRequest?.status === "requested") {
+            return {
+                text: "Requested",
+                disabled: true,
+                className: "bg-gray-400 cursor-not-allowed",
+                icon: <MessageSquare className="mr-2 h-4 w-4" />
+            };
+        }
+
+        return {
+            text: isPending ? "Making Request..." : "Request for Book",
+            disabled: isPending,
+            className: isPending 
+                ? "bg-gray-400 cursor-not-allowed" 
+                : "bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-600",
+            icon: isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" />
+        };
+    }
+
+    const buttonState = getRequestButtonState();
+    
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-teal-50/20">
@@ -150,15 +290,43 @@ const Book = ({
                                     transition={{ duration: 0.6, delay: 0.2 }}
                                     className="mt-6 space-y-3 max-w-md mx-auto"
                                 >
-                                    <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-                                        <Button
-                                            className="w-full h-12 bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-600 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-base"
-                                            onClick={() => alert("This is a demo. Contact functionality is not implemented.")}
-                                        >
-                                            <MessageSquare className="mr-2 h-4 w-4" />
-                                            Contact Seller
-                                        </Button>
-                                    </motion.div>
+                                    <div className="flex flex-col sm:flex-row gap-3">
+                                        <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="flex-1">
+                                            <Button
+                                                className={cn(
+                                                    "w-full h-12 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-base",
+                                                    buttonState.className
+                                                )}
+                                                onClick={handleConnectWithOwner}
+                                                disabled={buttonState.disabled}
+                                            >
+                                                {buttonState.icon}
+                                                {buttonState.text}
+                                            </Button>
+                                        </motion.div>
+
+                                        {bookRequest?.status === "booked" && (
+                                            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="flex-1">
+                                                <Button
+                                                    className={cn(
+                                                        "w-full h-12 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-base",
+                                                        canceling 
+                                                            ? "bg-slate-400 cursor-not-allowed" 
+                                                            : "bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-500 hover:to-slate-600"
+                                                    )}
+                                                    onClick={handleCancelBooking}
+                                                    disabled={canceling}
+                                                >
+                                                    {canceling ? (
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <MessageSquare className="mr-2 h-4 w-4" />
+                                                    )}
+                                                    {canceling ? "Cancelling..." : "Cancel Booking"}
+                                                </Button>
+                                            </motion.div>
+                                        )}
+                                    </div>
                                 </motion.div>
                             </div>
                         </div>
@@ -235,13 +403,16 @@ const Book = ({
                                                     </div>
                                                     Location
                                                 </h3>
-                                                {lat && lon ? (
+                                                {address && (
+                                                    <p className="text-slate-600 mb-3">{address}</p>
+                                                )}
+                                                {coordinates ? (
                                                     <div className="inline-flex items-center gap-2 bg-teal-50 text-teal-700 px-4 py-2 rounded-xl border border-teal-200">
                                                         <Eye className="h-4 w-4" />
                                                         <span className="font-medium">View location on map</span>
                                                     </div>
                                                 ) : (
-                                                    <p className="text-slate-500 italic">Location not provided</p>
+                                                    <p className="text-slate-500 italic">Location coordinates not provided</p>
                                                 )}
                                             </div>
                                         </div>

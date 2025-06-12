@@ -59,8 +59,7 @@ const Book = ({ book, success }: BookProps) => {
 
   const bookCategories = JSON.parse(book.category)
   const location = JSON.parse(book?.location || "")
-  const lat: number | null = location?.lat
-  const lon: number | null = location?.lon
+  const coordinates = location?.coordinates
   const images = book.imageUrl || []
 
   const nextImage = () => {
@@ -307,13 +306,16 @@ const Book = ({ book, success }: BookProps) => {
                           </div>
                           Location
                         </h3>
-                        {lat && lon ? (
+                        {location.address && (
+                          <p className="text-slate-600 mb-3">{location.address}</p>
+                        )}
+                        {coordinates ? (
                           <div className="inline-flex items-center gap-2 bg-teal-50 text-teal-700 px-4 py-2 rounded-xl border border-teal-200">
                             <Eye className="h-4 w-4" />
                             <span className="font-medium">View location on map</span>
                           </div>
                         ) : (
-                          <p className="text-slate-500 italic">Location not provided</p>
+                          <p className="text-slate-500 italic">Location coordinates not provided</p>
                         )}
                       </div>
                     </div>
