@@ -7,7 +7,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { formatDistanceToNow } from "date-fns"
-import { PublicBook } from '@/lib/types/books'
+import {  PublicBookWithId } from '@/lib/types/books'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
@@ -46,6 +46,11 @@ const Book = ({
     const {mutate : create_bookrequest, isPending} = useCreateBookRequest();
     const {mutate : cancel_booking, isPending : canceling} = useCancelBookRequest();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     useEffect(() => {
         if (userLoading) return;
@@ -57,14 +62,18 @@ const Book = ({
         }
     }, [userLoading, user?.userId, bookRequestLoading, refetch]);
 
-    if (!success) {
-        toast.error("Something went wrong!");
+    useEffect(() => {
+        if (isClient && !success) {
+            toast.error("Book does not exist");
+            redirect("/marketplace");
+        }
+    }, [success, isClient]);
+
+    if (!isClient || !success || !bookString) {
         return null;
     }
     
-    if (!bookString) return null;
-    
-    const book: PublicBook = JSON.parse(bookString);
+    const book: PublicBookWithId= JSON.parse(bookString);
     const bookCategories = book.category;
     const coordinates = book.location.coordinates;
     const address = book.location.address;
@@ -207,7 +216,7 @@ const Book = ({
 
                                     <Dialog>
                                         <DialogTrigger asChild>
-                                            <div className="relative aspect-[4/5] w-full max-w-md mx-auto rounded-2xl overflow-hidden bg-white shadow-lg border border-slate-200/60 cursor-pointer">
+                                            <div className="relative aspect-[4/5] w-full max-w-md mx-auto rounded-2xl overflow-hidden bg-white shadow-lg border border-slate-200/60 cursor-pointer hover:shadow-xl transition-all duration-300">
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent z-10" />
                                                 <Image
                                                     src={images[currentImageIndex] || "/kitabmantra.png"}
@@ -350,6 +359,10 @@ const Book = ({
                                                     <User className="h-5 w-5 mr-2 text-teal-600" />
                                                     <span className="font-medium">by {book.author}</span>
                                                 </div>
+                                                <div className="flex items-center text-sm text-slate-500 mb-2">
+                                                    <User className="h-4 w-4 mr-2 text-teal-600" />
+                                                    <span>Posted by: {book.userName} {book.userId === user?.userId && "(you)"}</span>
+                                                </div>
                                                 <div className="flex items-center text-sm text-slate-500">
                                                     <Clock className="h-4 w-4 mr-2 text-teal-600" />
                                                     <span>Posted {formatDistanceToNow(new Date(book.createdAt), { addSuffix: true })}</span>
@@ -407,7 +420,7 @@ const Book = ({
                                                     <p className="text-slate-600 mb-3">{address}</p>
                                                 )}
                                                 {coordinates ? (
-                                                    <div className="inline-flex items-center gap-2 bg-teal-50 text-teal-700 px-4 py-2 rounded-xl border border-teal-200">
+                                                    <div className="inline-flex items-center gap-2 bg-teal-50 text-teal-700 px-4 py-2 rounded-xl border border-teal-200 hover:bg-teal-100 transition-all cursor-pointer">
                                                         <Eye className="h-4 w-4" />
                                                         <span className="font-medium">View location on map</span>
                                                     </div>

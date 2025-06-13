@@ -4,11 +4,11 @@ import { getBookModel } from "@/lib/hooks/database/get-book-model"
 import { PublicBook } from "@/lib/types/books";
 import { getUser } from "../../user/get/getUser";
 
-export const getOneBook = async ({ bookId }: { bookId: string }) => {
+export const getOneBookForId = async ({ bookId }: { bookId: string }) => {
     const bookModel = await getBookModel();
 
     const books = await bookModel.findById({ _id: bookId })
-    if (!books) return { success: false }
+    if (!books || books.bookStatus != "available") return { success: false }
 
     const formattedBook: PublicBook = {
         userId: books.userId.toString(),

@@ -6,6 +6,17 @@ const bookRequestSchema = new Schema({
         type : String,
         required : true,
     },
+    customerName : {
+        type : String,
+        required : true,
+    },
+    customerEmail : {
+        type : String,
+        required : true,
+    },
+    customerPhoneNumber : {
+        type : String, required : true,
+    },
     bookOwnerId : {
         type : String,
         required : true,
@@ -21,21 +32,8 @@ const bookRequestSchema = new Schema({
         required : true,
         default : 'pending'
     },
-  
-    bookCategory: {
-        level: {
-            type: String
-        },
-        faculty: {
-            type: String,
-        },
-        year: {
-            type: String,
-        },
-        class: {
-            type: String
-        }
-    },
+    
+
     bookTitle: {
         type: String,
         required : true,
@@ -59,8 +57,13 @@ const bookRequestSchema = new Schema({
 },{timestamps : true})
 
 
-bookRequestSchema.index({bookStatus : 1,  requestStatus : 1})
 bookRequestSchema.index({ bookOwnerId: 1, requestStatus: 1 });
+bookRequestSchema.index({ customerId: 1, requestStatus: 1 });
+bookRequestSchema.index({
+    bookTitle: "text",
+    bookAuthor: "text",
+    bookDescription: "text",
+  });
 
 
 export const BookRequest = {

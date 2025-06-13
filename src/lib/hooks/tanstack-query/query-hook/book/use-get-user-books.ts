@@ -11,7 +11,7 @@ export const fetchUserBooks = async (query : QueryType) => {
 
 export const useGetUserBooks = (query : QueryType) => {
   return useQuery({
-    queryKey: ["get-user-books"],
+    queryKey: ["get-user-books", query],
     queryFn: () => fetchUserBooks(query),
     placeholderData: keepPreviousData,
     staleTime: 30 * 1000, 

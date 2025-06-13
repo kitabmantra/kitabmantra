@@ -13,6 +13,7 @@ export const getUser = async (userId: string) => {
             name: userData.name,
             email: userData.email,
             image: userData.image,
+            phoneNumber : userData.phoneNumber,
             userName: userData.userName,
             isAdmin: userData.isAdmin,
             createdAt: new Date(userData.createdAt).toISOString(),

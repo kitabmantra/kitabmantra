@@ -11,7 +11,24 @@ declare type ExamFacultyType = typeof examFaculty[number];
 declare type BookStatusType = typeof bookStatus[number];
 
 
-
+declare type ActivityType = {
+    _id : string,
+    customerId : string,
+    customerName : string,
+    customerEmail : string,
+    customerPhoneNumber : string,
+    bookOwnerId : string,
+    bookStatus : BookStatusType,
+    bookTitle : string,
+    bookAuthor : string,
+    bookDescription : string,
+    bookPrice : number,
+    requestStatus : "pending" | "rejected" | "accepted",
+    bookId : string,
+    bookOwnerName: string,
+    createdAt : Date,
+    updatedAt : Date,
+}
 
 
 
@@ -80,6 +97,32 @@ declare type PublicBook = {
     location: LocationType
     createdAt: string;
 }
+
+
+declare type PublicBookWithId = {
+    userId: string;
+    userName : string,
+    bookId: string;
+    title: string;
+    author: string;
+    description: string;
+    price: number;
+    condition: BookConditionType
+    imageUrl: string[];
+    category: {
+        level: BookCategoryLevelType
+        faculty?: string,
+        year?: string,
+        class?: string,
+
+    };
+    type: BookTypeType
+    bookStatus : BookStatusType
+    location: LocationType
+    createdAt: string;
+
+}
+
 
 
 

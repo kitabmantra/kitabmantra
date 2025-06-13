@@ -1,9 +1,10 @@
+import MyActivityPage from '@/components/elements/desktop/application/activity/my-activity-page'
 import React from 'react'
 
 function page() {
   return (
-    <div>
-      This is the  user activity page
+    <div className='w-full'>
+     <MyActivityPage />
     </div>
   )
 }

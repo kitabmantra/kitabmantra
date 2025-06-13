@@ -18,6 +18,7 @@ export const createBook = async ({
 }: CreateBookProps): Promise<CreateBookResponse> => {
     const BookModel = await getBookModel();
     const user = await getCurrentUser()
+    
 
     if (user?.userId) {
         try {

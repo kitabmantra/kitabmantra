@@ -44,18 +44,13 @@ export const getUserBookByQuery = async (options: QueryType) => {
             userId : currentUser.userId
         };
         
-        // Search across multiple fields
         if (search.trim()) {
-            query.$or = [
-                { title: { $regex: search, $options: "i" } },
-                { description: { $regex: search, $options: "i" } },
-                { author: { $regex: search, $options: "i" } }
-            ];
+            query.$text = {$search : search.trim()}
         }
 
         const Book = await getBookModel();
-        const validatedLimit = Math.min(Math.max(Number(limit), 30)); // Ensure limit <= 4
-        const validatedPage = Math.max(Number(page), 1); // Ensure page >= 1
+        const validatedLimit = Math.min(Math.max(Number(limit), 30)); 
+        const validatedPage = Math.max(Number(page), 1);
         const skip = (validatedPage - 1) * validatedLimit;
         const sortOrder = oldestFirst ? 1 : -1;
 
@@ -73,7 +68,7 @@ export const getUserBookByQuery = async (options: QueryType) => {
         
         return {
             success: true,
-            books : JSON.stringify(books), // No need to stringify here - let the JSON response handle it
+            books : JSON.stringify(books),
             totalBooks,
             totalPages,
             currentPage: validatedPage,

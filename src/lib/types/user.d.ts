@@ -4,6 +4,7 @@ declare type User = {
     email: string;
     userName: string;
     image: string;
+    phoneNumber : string;
     isAdmin: boolean;
     createdAt: string;
 }

@@ -30,3 +30,7 @@ adjustments to make:
 4. Buyer and sellers Workthrough.
 
 5. Add book impressions for user dashboard analytics
+
+
+
+TODO : After ching the bookStatus change in the chang eevertyhwiere too 

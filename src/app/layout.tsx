@@ -59,10 +59,10 @@ export default function RootLayout({
           <SessionProviderLayout>
         <QueryProvider>
             {children}
+        <Toaster />
         </QueryProvider>
           </SessionProviderLayout>
         <Analytics />
-        <Toaster />
       </body>
     </html>
   );

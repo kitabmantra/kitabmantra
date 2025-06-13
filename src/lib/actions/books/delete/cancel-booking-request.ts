@@ -2,6 +2,7 @@
 
 import { getBookRequestModel } from "@/lib/hooks/database/get-book-request-model";
 import { getCurrentUser } from "../../user/get/getCurrentUser"
+import { revalidatePath } from "next/cache";
 
 export const cancelBookingRequest = async({bookId} : {bookId : string}) =>{
     try {
@@ -22,6 +23,7 @@ export const cancelBookingRequest = async({bookId} : {bookId : string}) =>{
         const deleteTheRequest = await  bookRequestModel.findOneAndDelete({
             bookId,
             customerId : currentUser.userId,
+            requestStatus : "pending"
         });
         console.log('i am canceling')
         if (!deleteTheRequest) {
@@ -30,6 +32,7 @@ export const cancelBookingRequest = async({bookId} : {bookId : string}) =>{
                 success: false,
             };
         }
+        revalidatePath("/dashboard/activity")
         return {
             message : "successfully cancelled booking request",
             success : true,

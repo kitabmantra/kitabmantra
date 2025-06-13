@@ -74,8 +74,10 @@ export default function BookForm({ userId }: PostBookPageProps) {
         form.resetField("category.year")
         form.resetField("category.class")
       }
-      if (name === "type" && value.type !== "Sell") {
-        form.setValue("price", 0)
+      if (name === "type") {
+        if (value.type !== "Sell") {
+          form.setValue("price", 0, { shouldValidate: true })
+        }
       }
       if (name === "location.address" && !value.location?.address) {
         form.setValue("location.coordinates", undefined)
@@ -369,15 +371,21 @@ export default function BookForm({ userId }: PostBookPageProps) {
         setShowCoordinates(false)
         toast.success("Book Listed successfully!..")
       } else {
+          if(deleteImageOnError.length > 0) {
+          await removeMultipleImages(deleteImageOnError)
+      }
         toast.error("Failed to list the book. Please try again.")
       }
     } catch (error) {
-      await removeMultipleImages(deleteImageOnError)
+      if(deleteImageOnError.length > 0) {
+          await removeMultipleImages(deleteImageOnError)
+      }
       deleteImageOnError = []
       console.error("Error submitting form:", error)
       toast.error("An error occurred while listing the book")
     } finally {
       setIsSubmitting(false)
+      deleteImageOnError = [];
     }
   }
   
@@ -545,7 +553,16 @@ export default function BookForm({ userId }: PostBookPageProps) {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[#1E3A8A] font-medium">Type</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select 
+                              onValueChange={(value) => {
+                                field.onChange(value)
+                                if (value !== "Sell") {
+                                  form.setValue("price", 0, { shouldValidate: true })
+                                }
+                              }} 
+                              defaultValue={field.value}
+                              value={field.value}
+                            >
                               <FormControl>
                                 <SelectTrigger className="border-[#1E3A8A] w-full focus:border-[#0D9488] focus:ring-[#0D9488] bg-[#F9FAFB]">
                                   <SelectValue placeholder="Select type" />

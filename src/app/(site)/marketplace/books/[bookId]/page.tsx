@@ -1,6 +1,7 @@
 import Book from '@/components/elements/desktop/site/books/Book'
 import { getAllBooks } from '@/lib/actions/books/get/getAllBooks'
 import { getOneBook } from '@/lib/actions/books/get/getOneBook'
+import { getOneBookForId } from '@/lib/actions/books/get/getOneBookForId'
 import { Metadata } from 'next'
 import React from 'react'
 
@@ -42,7 +43,8 @@ export async function generateMetadata(props: { params: Params }): Promise<Metad
 
 const Page = async (props: { params: Params }) => {
     const params = await props.params
-    const { success, formattedBook } = await getOneBook({ bookId: params.bookId })
+    const { success, formattedBook } = await getOneBookForId({ bookId: params.bookId })
+    
     
     return <Book book={formattedBook} success={success} />
 }

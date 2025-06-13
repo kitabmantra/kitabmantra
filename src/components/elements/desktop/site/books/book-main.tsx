@@ -178,7 +178,7 @@ function BookMainPage() {
           ) : (
             <>
               {data?.books && data.books.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5  gap-4">
                   {data.books.map((book: BookForStore) => (
                     <BookCard key={book._id} book={book} />
                   ))}

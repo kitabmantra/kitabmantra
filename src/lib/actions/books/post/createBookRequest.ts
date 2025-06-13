@@ -56,20 +56,16 @@ import { getBookRequestModel } from "@/lib/hooks/database/get-book-request-model
       };
     }
 
-    console.log("this is the found book data : ",bookData)
+
 
     const newRequest = await bookRequestModel.create({
       customerId: currentUser.userId,
+      customerName : currentUser.name,
+      customerEmail : currentUser.name,
+      customerPhoneNumber : currentUser.phoneNumber,
       bookOwnerId: bookData.userId,
       bookStatus: bookData.bookStatus,
       requestStatus: 'pending',
-     
-      bookCategory: {
-        level: bookData.category?.level || "",
-        faculty: bookData.category?.faculty || "",
-        year: bookData.category?.year || "",
-        class: bookData.category?.class || "",
-      },
       bookTitle: bookData.title,
       bookAuthor: bookData.author,
       bookDescription: bookData.description,

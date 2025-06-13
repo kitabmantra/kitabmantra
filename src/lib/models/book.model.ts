@@ -65,12 +65,7 @@ export const bookSchema = new Schema({
         },
         coordinates: {
           type: [Number], // [longitude, latitude]
-          validate: {
-            validator: function (val: number[]) {
-              return val.length === 2;
-            },
-            message: "Coordinates must be an array of two numbers: [longitude, latitude]",
-          }
+          
         },
         address: {
           type: String,
