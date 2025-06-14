@@ -37,9 +37,10 @@ export const cancelBookingRequest = async({bookId} : {bookId : string}) =>{
             message : "successfully cancelled booking request",
             success : true,
         }
-
+        
     } catch (error) {
         console.log("error in book request cancel ",error)
+        revalidatePath("/dashboard/activity")
         return {
             error : "failed to cancel the request",
             success : false,

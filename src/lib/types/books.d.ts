@@ -12,22 +12,25 @@ declare type BookStatusType = typeof bookStatus[number];
 
 
 declare type ActivityType = {
-    _id : string,
-    customerId : string,
-    customerName : string,
-    customerEmail : string,
-    customerPhoneNumber : string,
-    bookOwnerId : string,
-    bookStatus : BookStatusType,
-    bookTitle : string,
-    bookAuthor : string,
-    bookDescription : string,
-    bookPrice : number,
-    requestStatus : "pending" | "rejected" | "accepted",
-    bookId : string,
+    _id: string,
+    customerId: string,
+    customerName: string,
+    customerEmail: string,
+    customerPhoneNumber: string,
+    bookOwnerId: string,
+    bookStatus: BookStatusType,
+    bookTitle: string,
+    bookAuthor: string,
+    bookDescription: string,
+    bookPrice: number,
+    requestStatus: "pending" | "rejected" | "accepted",
+    bookId: string,
     bookOwnerName: string,
-    createdAt : Date,
-    updatedAt : Date,
+    bookOwnerEmail: string,
+    bookOwnerPhoneNumber: string,
+    bookStatus: string,
+    createdAt: Date,
+    updatedAt: Date,
 }
 
 
@@ -35,7 +38,7 @@ declare type ActivityType = {
 declare type LocationType = {
     address: string;
     coordinates?: [number, number];
-  };
+};
 
 
 declare type Book = {
@@ -51,7 +54,7 @@ declare type Book = {
     type: BookTypeType;
     location: string;
     createdAt: string;
-    bookStatus : BookStatusType;
+    bookStatus: BookStatusType;
 }
 
 declare type BookForStore = {
@@ -73,7 +76,7 @@ declare type BookForStore = {
     type: BookTypeType;
     location: LocationType,
     createdAt: string;
-    bookStatus : BookStatusType;
+    bookStatus: BookStatusType;
 }
 
 declare type PublicBook = {
@@ -93,7 +96,7 @@ declare type PublicBook = {
 
     };
     type: BookTypeType
-    bookStatus : BookStatusType
+    bookStatus: BookStatusType
     location: LocationType
     createdAt: string;
 }
@@ -101,7 +104,7 @@ declare type PublicBook = {
 
 declare type PublicBookWithId = {
     userId: string;
-    userName : string,
+    userName: string,
     bookId: string;
     title: string;
     author: string;
@@ -117,7 +120,7 @@ declare type PublicBookWithId = {
 
     };
     type: BookTypeType
-    bookStatus : BookStatusType
+    bookStatus: BookStatusType
     location: LocationType
     createdAt: string;
 
@@ -144,12 +147,12 @@ declare type CreateBook = {
     };
     type: BookTypeType
     location: LocationType
-    
+
 }
 
 
 declare type UpdateBook = {
-    bookId : string
+    bookId: string
     title: string;
     author: string;
     description: string;
@@ -165,8 +168,8 @@ declare type UpdateBook = {
     };
     type: BookTypeType
     location: LocationType
-    bookStatus : BookStatusType
-    
+    bookStatus: BookStatusType
+
 }
 
 

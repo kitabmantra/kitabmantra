@@ -88,15 +88,13 @@ function BookMainPage() {
     });
   }
 
-  // Generate visible page numbers with window around current page
   const getVisiblePages = () => {
     const visiblePages = [];
-    const windowSize = 2; // Number of pages to show on each side of current
+    const windowSize = 2; 
     
     let startPage = Math.max(1, currentPage - windowSize);
     let endPage = Math.min(totalPages, currentPage + windowSize);
 
-    // Adjust if we're at the start or end
     if (currentPage <= windowSize + 1) {
       endPage = Math.min(2 * windowSize + 1, totalPages);
     }
@@ -141,7 +139,7 @@ function BookMainPage() {
 
         <div className="flex-1">
           {(dataLoading || isFetching) ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-5 gap-4">
+            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
               {Array.from({ length: itemPerPage }).map((_, i) => (
                 <Card key={i} className="w-[280px] h-[300px] border-slate-200 overflow-hidden">
                   <div className="h-48 w-full bg-slate-100">
@@ -178,7 +176,7 @@ function BookMainPage() {
           ) : (
             <>
               {data?.books && data.books.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5  gap-4">
+                <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                   {data.books.map((book: BookForStore) => (
                     <BookCard key={book._id} book={book} />
                   ))}

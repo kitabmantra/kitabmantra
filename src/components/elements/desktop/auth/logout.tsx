@@ -1,3 +1,4 @@
+"use client"
 import { useIsMobile } from "@/lib/hooks/responsive/useIsMobile";
 import {
   Avatar,
@@ -16,10 +17,17 @@ import { Button } from "@/components/ui/button";
 import { LogOut, MoreVertical } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { handleLogOut } from "@/lib/actions/auth/sign-out";
+import { useUserStore } from "@/lib/hooks/store/user/useUserStore";
 
 
 export const UserDropdown = ({ user, collapsed }: { user: User; collapsed: boolean }) => {
   const isMobile = useIsMobile();
+  const {reset} = useUserStore();
+  const handleSignOut = async() =>{
+    await handleLogOut();
+    reset();
+  }
+  
   return (
     <div className="p-2 border-t-1">
       <DropdownMenu>
@@ -104,7 +112,7 @@ export const UserDropdown = ({ user, collapsed }: { user: User; collapsed: boole
             </>
           )}
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleLogOut}>
+          <DropdownMenuItem onClick={handleSignOut}>
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
           </DropdownMenuItem>

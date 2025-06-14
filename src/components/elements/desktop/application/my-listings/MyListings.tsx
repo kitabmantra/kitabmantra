@@ -122,15 +122,13 @@ export default function MyListingsPage() {
     }))
   }
 
-  // Generate visible page numbers with window around current page
   const getVisiblePages = () => {
     const visiblePages = [];
-    const windowSize = 2; // Number of pages to show on each side of current
+    const windowSize = 2; 
     
     let startPage = Math.max(1, currentPage - windowSize);
     let endPage = Math.min(totalPages, currentPage + windowSize);
 
-    // Adjust if we're at the start or end
     if (currentPage <= windowSize + 1) {
       endPage = Math.min(2 * windowSize + 1, totalPages);
     }
@@ -205,7 +203,7 @@ export default function MyListingsPage() {
 
               <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                 {userBooksLoading || isFetching ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                     {Array.from({ length: 8 }).map((_, i) => (
                       <Card key={i} className="w-full h-[300px] border-slate-200 overflow-hidden">
                         <div className="h-48 w-full bg-slate-100">
@@ -236,7 +234,7 @@ export default function MyListingsPage() {
                     ))}
                   </div>
                 ) : userBooks?.books && userBooks.books.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                     {userBooks.books.map((book: BookForStore) => (
                       <BookCard key={book._id} book={book} success={userBooks.success} handleDelete={handleDelete} />
                     ))}

@@ -58,6 +58,7 @@ export async function updateBookRequestStatus({ requestId, status, userId }: Upd
     return { success: true };
     
   } catch (error) {
+    revalidatePath("/dashboard/activity");
     console.error("Update failed:", error);
     return { success: false, error: error instanceof Error ? error.message : "Update failed" };
   }

@@ -3,6 +3,7 @@
 import { getBookModel } from "@/lib/hooks/database/get-book-model";
 import { getCurrentUser } from "../../user/get/getCurrentUser";
 import { getBookRequestModel } from "@/lib/hooks/database/get-book-request-model";
+import { getUser } from "../../user/get/getUser";
 
   export const createBookRequest = async ({bookId} : {bookId: string}) => {
   console.log("i am called")
@@ -56,6 +57,16 @@ import { getBookRequestModel } from "@/lib/hooks/database/get-book-request-model
       };
     }
 
+    const bookOwner = await getUser(bookData.userId);
+    console.log("this is cheing book onwer", bookOwner)
+
+    if(!bookOwner || !bookOwner.formattedUserData){
+      return {
+        error : "no such book owner exists",
+        success : false,
+      }
+    }
+
 
 
     const newRequest = await bookRequestModel.create({
@@ -64,6 +75,9 @@ import { getBookRequestModel } from "@/lib/hooks/database/get-book-request-model
       customerEmail : currentUser.name,
       customerPhoneNumber : currentUser.phoneNumber,
       bookOwnerId: bookData.userId,
+      bookOwnerName : bookOwner.formattedUserData?.name,
+      bookOwnerEmail : bookOwner.formattedUserData?.email,
+      bookOwnerPhoneNumber : bookOwner.formattedUserData?.phoneNumber,
       bookStatus: bookData.bookStatus,
       requestStatus: 'pending',
       bookTitle: bookData.title,
