@@ -169,7 +169,7 @@ export default function BookForm({ userId }: PostBookPageProps) {
 
       form.setValue("location", {
         address,
-        coordinates: [latitude, longitude] as [number, number],
+        coordinates: [longitude, latitude] as [number, number],
       })
       setShowCoordinates(true)
       toast.success("Location set successfully!")
@@ -184,9 +184,9 @@ export default function BookForm({ userId }: PostBookPageProps) {
     const coordinates = currentLocation.coordinates || [0, 0] as [number, number];
     
     if (type === 'lat') {
-      coordinates[0] = parseFloat(value) || 0;
-    } else {
       coordinates[1] = parseFloat(value) || 0;
+    } else {
+      coordinates[0] = parseFloat(value) || 0;
     }
     
     form.setValue("location.coordinates", coordinates as [number, number]);

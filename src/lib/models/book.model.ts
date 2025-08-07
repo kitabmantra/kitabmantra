@@ -85,7 +85,7 @@ export const bookSchema = new Schema({
 
 bookSchema.index({ title: "text", description: "text", author: "text" });
 bookSchema.index({ price: 1 });
-bookSchema.index({ "location.lat": 1, "location.lon": 1 });
+bookSchema.index({ location: "2dsphere" });
 bookSchema.index({ 
   "category.level": 1,
   "category.faculty": 1,

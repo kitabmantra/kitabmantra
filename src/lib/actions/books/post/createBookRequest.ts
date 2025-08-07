@@ -48,6 +48,7 @@ import { getUser } from "../../user/get/getUser";
       bookId,
       bookOwnerId: bookData.userId,
       customerId: currentUser.userId,
+      requestStatus : {$ne : "rejected"}
     });
 
     if (existingRequest) {

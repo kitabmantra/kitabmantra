@@ -1,7 +1,6 @@
 "use client"
 import { Spinner } from '@/components/elements/common/spinner/spinner';
 import { ActivityType as Activity } from '@/lib/types/books';
-import { useCancelBookRequest } from '@/lib/hooks/tanstack-query/mutate-hook/books/use-cancel-book-request';
 import { useUpdateBookRequestStatus } from "@/lib/hooks/tanstack-query/mutate-hook/books/use-update-book-request-status";
 import { User } from "lucide-react";
 import { useState } from 'react';
@@ -9,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
+import { useCancelBookRequestInDashboard } from '@/lib/hooks/tanstack-query/mutate-hook/books/use-cancel-in-dashboard';
 
 interface ActivityCardProps {
     activity: Activity;
@@ -16,7 +16,7 @@ interface ActivityCardProps {
 }
 
 export const ActivityCard = ({ activity, currentUserId }: ActivityCardProps) => { 
-    const {mutate : cancel_request, isPending: canceling} = useCancelBookRequest();
+    const {mutate : cancel_request, isPending: canceling} = useCancelBookRequestInDashboard();
     const { mutate: updateRequestStatus, isPending: isUpdating } = useUpdateBookRequestStatus();
     const [isAccepting, setIsAccepting] = useState(false);
     const [isRejecting, setIsRejecting] = useState(false);

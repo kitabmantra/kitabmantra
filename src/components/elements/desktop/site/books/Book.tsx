@@ -48,6 +48,8 @@ const Book = ({
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isClient, setIsClient] = useState(false);
 
+    console.log("this is book request status : ",bookRequest)
+
     useEffect(() => {
         setIsClient(true);
     }, []);

@@ -25,7 +25,10 @@ export const getBookRequestStatus = async({bookId, userId} : {bookId : string, u
         const findBookRequest = await bookRequest.findOne({
             bookId,
             customerId : userId,
+            requestStatus : {$ne : "rejected"}
+
         });
+        console.log("book request sttus : ", findBookRequest)
         if(!findBookRequest){
             return {
                 status : "not-booked"

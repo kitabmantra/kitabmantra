@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 import path from 'path';
 
+const allowedDevOrigins = ['http://*.baburam-sarki.com.np' ];
+
 const nextConfig: NextConfig = {
   webpack: (config, { isServer }) => {
     if (!isServer) {
