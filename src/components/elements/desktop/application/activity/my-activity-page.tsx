@@ -148,7 +148,7 @@ function MyActivityPage() {
         redirect("/login")
         return null;
     }
-
+    
     return (
         <div className="min-h-screen w-full bg-[#F9FAFB]">
             <div className="py-3 px-4 h-full">
