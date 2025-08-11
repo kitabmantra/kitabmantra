@@ -5,6 +5,7 @@ import React from 'react'
 
 async function page() {
   const user = await getCurrentUser();
+  console.log("user")
   if (!user) redirect("/login");
   return (
     <div>
