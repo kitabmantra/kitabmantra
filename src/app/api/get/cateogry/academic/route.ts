@@ -21,9 +21,11 @@ export async function GET(){
         if(data.success && data.categories === null){
             data.categories = []
         }
+        console.log("data in getting the data : ",data)
         return NextResponse.json(data,{status:200})
     } catch (error) {
         error = getErrorMessage(error)
+        console.log("error in getting hte data : ",error)
         return NextResponse.json({
             success:false,
             error
