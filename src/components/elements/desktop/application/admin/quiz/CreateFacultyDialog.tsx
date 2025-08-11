@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import toast from "react-hot-toast"
 
 const facultySchema = z.object({
   name: z.string().min(2, "Faculty name is required").max(20, "Max 20 characters"),
@@ -32,16 +31,11 @@ function CreateFacultyDialog({ onCreated, triggerLabel = "Create Faculty" }: Cre
   })
 
   const onSubmit = async (values: FacultyFormValues) => {
-    // Simulate API call or delegate to parent
-    await new Promise(resolve => setTimeout(resolve, 400))
-    try {
-      if (onCreated) await onCreated(values)
-      toast.success(`Faculty created: ${values.name} (${values.code})`)
-      form.reset({ name: "", code: "" })
-      setOpen(false)
-    } catch (err) {
-      toast.error("Failed to create faculty")
+    console.log("this is the values : ",values)
+    if (onCreated) {
+      await onCreated(values)
     }
+    setOpen(false)
   }
 
   return (

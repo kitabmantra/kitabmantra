@@ -1,6 +1,7 @@
 "use client"
 
-import CreateFacultyDialog from "./CreateFacultyDialogx"
+import CreateFacultyDialog from "./CreateFacultyDialog"
+
 
 function AdminQuizSection() {
   return (
