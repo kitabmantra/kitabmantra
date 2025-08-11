@@ -1,9 +1,11 @@
-import React from 'react'
+"use client"
+
+import CreateFacultyDialog from "./CreateFacultyDialogx"
 
 function AdminQuizSection() {
   return (
-    <div>
-      
+    <div className="p-6">
+      <CreateFacultyDialog />
     </div>
   )
 }
