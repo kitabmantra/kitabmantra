@@ -4,13 +4,17 @@ import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/actions/user/get/getCurrentUser';
 async function page() {
   const currentUser = await getCurrentUser()
-  if(!currentUser ){
-    return redirect("/login")
+  if (!currentUser) {
+     redirect("/login")
   }
- 
+  if (!currentUser.isAdmin) {
+    redirect("/")
+  }
+
   return (
-    <LevelNamePage  />
+    <LevelNamePage />
   )
+
 }
 
 export default page

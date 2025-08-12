@@ -285,10 +285,6 @@ function AcademicManagementPage() {
     setSearchTerm("")
   }, [])
 
-  if(isLoading){
-    return <div>loading...</div>
-  }
-
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -528,7 +524,9 @@ function AcademicManagementPage() {
                         }}
                         className="p-2 sm:p-3"
                       >
-                        <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 hover:border-blue-300 hover:shadow-sm transition-all duration-200">
+                        <div 
+                          onMouseOver={()=>router.prefetch(`/quiz-section/academic/level/${category.levelName}`)}
+                          className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 hover:border-blue-300 hover:shadow-sm transition-all duration-200">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">

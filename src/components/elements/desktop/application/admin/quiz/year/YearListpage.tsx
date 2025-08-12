@@ -5,7 +5,6 @@ import { useState, useMemo, useCallback, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useGetLevelFaculty } from "@/lib/hooks/tanstack-query/query-hook/quiz/academic/faculty/use-get-level-faculty"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -17,27 +16,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, Search, BookOpen, TrendingUp, AlertCircle, X, RefreshCw, ArrowLeft, Building2 } from "lucide-react"
+import { Plus, Search, Calendar, TrendingUp, AlertCircle, X, RefreshCw, ArrowLeft, Clock } from "lucide-react"
 import { toast } from "react-hot-toast"
-import {
-  createNewFaculty,
-  type CreateNewFacultyProps,
-} from "@/lib/actions/quiz/academic/faculty/post/create-new-faculty"
 import { useQueryClient } from "@tanstack/react-query"
-import { deleteFaculty } from "@/lib/actions/quiz/academic/faculty/delete/delete-faculty"
-import { useLevelName } from "@/lib/hooks/params/useLevelName"
+import { useFacultyName } from '@/lib/hooks/params/useFaucltyName'
+import { useLevelName } from '@/lib/hooks/params/useLevelName'
 import { Skeleton } from "@/components/ui/skeleton"
 import { useRouter } from "next/navigation"
-import { updateFaculty, type UpdateFacultyProps } from "@/lib/actions/quiz/academic/faculty/put/update-faculty"
-import { DesktopFacultyGrid } from "@/components/elements/desktop/application/admin/quiz/faculty/desktop-faculty.grid"
-import { MobileFacultyList } from "@/components/elements/desktop/application/admin/quiz/faculty/mobile-faculty-list"
+import { redirect } from 'next/navigation'
+import { useGetAcademicYear } from "@/lib/hooks/tanstack-query/query-hook/quiz/academic/year/use-get-academic-year"
+import { createYear, type CreateYearRequestType } from "@/lib/actions/quiz/year/post/create-year"
+import { updateYear, type UpdateYearRequestType } from "@/lib/actions/quiz/year/put/update-year"
+import { deleteYear, type DeleteYearRequestType } from "@/lib/actions/quiz/year/delete/delete-year"
+import { MobileYearList } from "@/components/elements/desktop/application/admin/quiz/year/mobile-year-list"
+import { DesktopYearGrid } from "./desktop-year.grid"
 
 // Enhanced validation schema
-const facultySchema = z.object({
-  faculty: z
+const yearSchema = z.object({
+  yearName: z
     .string()
-    .min(2, "Faculty name must be at least 2 characters")
-    .max(50, "Faculty name must be less than 50 characters")
+    .min(2, "Year name must be at least 2 characters")
+    .max(50, "Year name must be less than 50 characters")
     .regex(/^[a-zA-Z0-9\-_\s]+$/, "Only letters, numbers, hyphens, underscores, and spaces are allowed")
     .transform((val) => {
       // Trim spaces from front and back
@@ -50,88 +49,106 @@ const facultySchema = z.object({
       // Remove hyphens and underscores from start and end
       return formatted.replace(/^[-_]+|[-_]+$/g, "")
     })
-    .refine((val) => val.length >= 2, "Faculty name must be at least 2 characters after formatting")
+    .refine((val) => val.length >= 2, "Year name must be at least 2 characters after formatting")
     .refine(
       (val) => !val.startsWith("-") && !val.startsWith("_") && !val.endsWith("-") && !val.endsWith("_"),
-      "Faculty name cannot start or end with hyphens or underscores"
+      "Year name cannot start or end with hyphens or underscores"
     ),
 })
 
-type FacultyFormValues = z.infer<typeof facultySchema>
+type YearFormValues = z.infer<typeof yearSchema>
 
-interface FacultyResponse {
+interface YearResponse {
   id: string
   levelName: string
-  type: string
+  typeName: string
   faculty: string
-  displayName?: string
+  yearName: string
   createdAt: string
   updatedAt: string
 }
 
-function LevelNamePage() {
+export interface GetYearQueryType {
+    typeName : "academic" | "entrance"
+    levelName : string
+    faculty : string
+}
+
+function YearListpage() {
+  const facultyName = useFacultyName()
   const levelName = useLevelName()
-  const { data: levelFaculty, isLoading, error } = useGetLevelFaculty("academic", levelName)
+  const { data: academicYear, isLoading, error } = useGetAcademicYear({
+    typeName : "academic",
+    levelName : levelName,
+    faculty : facultyName
+  })
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [updating, setUpdating] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [editingFaculty, setEditingFaculty] = useState<FacultyResponse | null>(null)
+  const [editingYear, setEditingYear] = useState<YearResponse | null>(null)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const queryClient = useQueryClient()
   const router = useRouter()
+
   const parentRef = useRef<HTMLDivElement>(null)
 
-  const faculties = useMemo(() => {
-    const allFaculties = levelFaculty?.faculties || []
-    if (!searchTerm) return allFaculties
-    return allFaculties.filter((faculty: FacultyResponse) =>
-      faculty.faculty.toLowerCase().includes(searchTerm.toLowerCase()))
-  }, [levelFaculty, searchTerm])
+  // Redirect if no faculty or level name
+  if (!facultyName || !levelName) {
+    redirect("/quiz-section/academic")
+  }
 
-  const form = useForm<FacultyFormValues>({
-    resolver: zodResolver(facultySchema),
+  const years = useMemo(() => {
+    const allYears = academicYear?.years || []
+    if (!searchTerm) return allYears
+    return allYears.filter((year: YearResponse) =>
+      year.yearName.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }, [academicYear, searchTerm])
+
+  const form = useForm<YearFormValues>({
+    resolver: zodResolver(yearSchema),
     defaultValues: {
-      faculty: "",
+      yearName: "",
     },
   })
 
-  const editForm = useForm<FacultyFormValues>({
-    resolver: zodResolver(facultySchema),
+  const editForm = useForm<YearFormValues>({
+    resolver: zodResolver(yearSchema),
     defaultValues: {
-      faculty: "",
+      yearName: "",
     },
   })
 
   const onSubmit = useCallback(
-    async (values: FacultyFormValues) => {
+    async (values: YearFormValues) => {
       if (creating) return
       setCreating(true)
       try {
-        const formData: CreateNewFacultyProps = {
+        const formData: CreateYearRequestType = {
           levelName: levelName,
-          type: "academic" as const,
-          faculty: values.faculty,
+          typeName: "academic" as const,
+          faculty: facultyName,
+          yearName: values.yearName,
         }
-        const res = await createNewFaculty(formData)
+        const res = await createYear(formData)
         if (res.success) {
-          toast.success("Faculty created successfully!")
+          toast.success("Year created successfully!")
           form.reset()
           setShowCreateForm(false)
-          queryClient.invalidateQueries({ queryKey: ["get-level-faculty"] })
+          queryClient.invalidateQueries({ queryKey: ["get-academic-year"] })
         } else {
-          toast.error(res.error || "Failed to create faculty. Please try again.")
+          toast.error(res.error as string || "Failed to create year. Please try again.")
         }
       } catch (error) {
-        toast.error((error as string) || "An error occurred while creating the faculty")
+        toast.error((error as string) || "An error occurred while creating the year")
       } finally {
         setCreating(false)
       }
     },
-    [creating, form, queryClient, levelName]
+    [creating, form, queryClient, levelName, facultyName]
   )
 
- 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value
@@ -139,8 +156,8 @@ function LevelNamePage() {
       const formattedValue = value
       .toLowerCase()
       .replace(/\s+/g, "-")
-      .replace(/[^a-zA-Z0-9\-_]/g, "")
-      form.setValue("faculty", formattedValue)
+      .replace(/[^a-zA-Z0-9\-_]/g, "")// Remove -/_ from start/end
+      form.setValue("yearName", formattedValue)
     },
     [form]
   )
@@ -154,33 +171,36 @@ function LevelNamePage() {
         .replace(/\s+/g, "-")
         .replace(/[^a-z0-9\-_]/g, "")
         .replace(/^[-_]+|[-_]+$/g, "") // Remove -/_ from start/end
-      editForm.setValue("faculty", formattedValue)
+      editForm.setValue("yearName", formattedValue)
     },
     [editForm]
   )
 
   const stats = useMemo(() => {
-    const total = faculties.length
-    const academic = faculties.filter((f: FacultyResponse) => f.type === "academic").length
-    const entrance = faculties.filter((f: FacultyResponse) => f.type === "entrance").length
+    const total = years.length
+    const academic = years.filter((y: YearResponse) => y.typeName === "academic").length
+    const entrance = years.filter((y: YearResponse) => y.typeName === "entrance").length
     return { total, academic, entrance }
-  }, [faculties])
+  }, [years])
 
   // Action handlers
   const handleDelete = useCallback(
-    async (faculty: FacultyResponse) => {
+    async (year: YearResponse) => {
       try {
         setDeleting(true)
-        const res = await deleteFaculty(faculty.id)
+        const deleteData: DeleteYearRequestType = {
+          id: year.id,
+        }
+        const res = await deleteYear(deleteData)
         if (res.success) {
-          toast.success(`"${faculty.faculty}" deleted successfully`)
-          queryClient.invalidateQueries({ queryKey: ["get-level-faculty"] })
+          toast.success(`"${year.yearName}" deleted successfully`)
+          queryClient.invalidateQueries({ queryKey: ["get-academic-year"] })
         } else {
-          toast.error(res.error || "Failed to delete faculty")
+          toast.error(res.error || "Failed to delete year")
         }
       } catch (error) {
-        toast.error("Failed to delete faculty")
-        console.error("Error deleting faculty:", error)
+        toast.error("Failed to delete year")
+        console.error("Error deleting year:", error)
       } finally {
         setDeleting(false)
       }
@@ -189,51 +209,51 @@ function LevelNamePage() {
   )
 
   const handleUpdate = useCallback(
-    (faculty: FacultyResponse) => {
-      setEditingFaculty(faculty)
-      editForm.reset({ faculty: faculty.faculty })
+    (year: YearResponse) => {
+      setEditingYear(year)
+      editForm.reset({ yearName: year.yearName })
     },
     [editForm]
   )
 
   const handleEditSubmit = useCallback(
-    async (values: FacultyFormValues) => {
-      if (!editingFaculty) return
+    async (values: YearFormValues) => {
+      if (!editingYear) return
 
-      if (values.faculty.toLowerCase().replace(/\s+/g, "-") === editingFaculty.faculty) {
-        toast.error("Please make some changes to the faculty name before updating")
+      if (values.yearName.toLowerCase().replace(/\s+/g, "-") === editingYear.yearName) {
+        toast.error("Please make some changes to the year name before updating")
         return
       }
 
       try {
         setUpdating(true)
-        const updateData: UpdateFacultyProps = {
-          id: editingFaculty.id,
-          faculty: values.faculty,
+        const updateData: UpdateYearRequestType = {
+          id: editingYear.id,
+          yearName: values.yearName,
         }
-        const res = await updateFaculty(updateData)
+        const res = await updateYear(updateData)
         if (res.success) {
-          toast.success(`"${editingFaculty.faculty}" updated successfully`)
-          queryClient.invalidateQueries({ queryKey: ["get-level-faculty"] })
-          setEditingFaculty(null)
+          toast.success(`"${editingYear.yearName}" updated successfully`)
+          queryClient.invalidateQueries({ queryKey: ["get-academic-year"] })
+          setEditingYear(null)
           editForm.reset()
         } else {
-          toast.error(res.error || "Failed to update faculty")
+          toast.error(res.error || "Failed to update year")
         }
       } catch (error) {
-        toast.error((error as string) || "An error occurred while updating the faculty")
+        toast.error((error as string) || "An error occurred while updating the year")
       } finally {
         setUpdating(false)
       }
     },
-    [editingFaculty, editForm, queryClient]
+    [editingYear, editForm, queryClient]
   )
 
   const handleVisit = useCallback(
-    (faculty: FacultyResponse) => {
-      router.push(`/quiz-section/academic/level/${levelName}/faculty/${faculty.faculty}`)
+    (year: YearResponse) => {
+      router.push(`/quiz-section/academic/level/${levelName}/faculty/${facultyName}/${year.yearName}`)
     },
-    [router, levelName]
+    [router, levelName, facultyName]
   )
 
   const clearSearch = useCallback(() => {
@@ -245,8 +265,8 @@ function LevelNamePage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Faculties</h3>
-          <p className="text-gray-600 mb-4">Failed to load faculty data</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Years</h3>
+          <p className="text-gray-600 mb-4">Failed to load year data</p>
           <Button onClick={() => window.location.reload()} variant="outline">
             <RefreshCw className="w-4 h-4 mr-2" />
             Retry
@@ -268,9 +288,9 @@ function LevelNamePage() {
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
                 <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Faculty Management</h1>
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Year Management</h1>
                   <p className="text-sm sm:text-base text-gray-600 mt-1">
-                    Academic &gt; {levelName.replace(/-/g, " ")}
+                    Academic &gt; {levelName.replace(/-/g, " ")} &gt; {facultyName.replace(/-/g, " ")}
                   </p>
                 </div>
               </div>
@@ -280,7 +300,7 @@ function LevelNamePage() {
             <div className="flex gap-2 sm:gap-3">
               <div className="bg-blue-50 border border-blue-200 rounded-lg px-2 sm:px-3 py-2 min-w-[80px] sm:min-w-[100px]">
                 <div className="flex items-center gap-1 sm:gap-2">
-                  <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
+                  <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
                   <div>
                     <p className="text-xs font-medium text-blue-900">Total</p>
                     <p className="text-lg sm:text-xl font-bold text-blue-600">{stats.total}</p>
@@ -309,7 +329,7 @@ function LevelNamePage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="Search faculties..."
+                  placeholder="Search years..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9 h-9 border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-colors"
@@ -337,7 +357,7 @@ function LevelNamePage() {
                 onClick={() => setShowCreateForm(true)}
               >
                 <Plus className="w-4 h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Create New Faculty</span>
+                <span className="hidden sm:inline">Create New Year</span>
                 <span className="sm:hidden">Create</span>
               </Button>
             </div>
@@ -349,23 +369,22 @@ function LevelNamePage() {
       <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Create New Faculty</DialogTitle>
+            <DialogTitle>Create New Year</DialogTitle>
             <DialogDescription>
-              Add a new academic faculty to the level. Examples: Computer Information Systems (CIS), Bachelor of
-              Computer Science (BCS), Information Technology (IT)
+              Add a new academic year to the faculty. Examples: First Year, Second Year, Third Year, Fourth Year
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="faculty"
+                name="yearName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Faculty Code/Abbreviation</FormLabel>
+                    <FormLabel>Year Name</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="e.g., computer-information-systems, bachelor-of-computer-science"
+                        placeholder="e.g., first-year, second-year, third-year"
                         value={field.value}
                         onChange={handleInputChange}
                         disabled={creating}
@@ -397,7 +416,7 @@ function LevelNamePage() {
                   {creating ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                   ) : null}
-                  {creating ? "Creating..." : "Create Faculty"}
+                  {creating ? "Creating..." : "Create Year"}
                 </Button>
               </DialogFooter>
             </form>
@@ -413,10 +432,7 @@ function LevelNamePage() {
               <div className="lg:hidden py-4">
                 <div className="space-y-4">
                   {Array.from({ length: 8 }).map((_, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg mx-4"
-                    >
+                    <div key={index} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg mx-4">
                       <div className="flex items-center gap-4">
                         <Skeleton className="w-10 h-10 rounded-lg" />
                         <div className="space-y-2">
@@ -434,10 +450,7 @@ function LevelNamePage() {
                 <div className="px-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {Array.from({ length: 8 }).map((_, index) => (
-                      <div
-                        key={index}
-                        className="w-80 h-96 flex flex-col border border-gray-200 rounded-xl shadow-sm bg-white"
-                      >
+                      <div key={index} className="w-80 h-96 flex flex-col border border-gray-200 rounded-xl shadow-sm bg-white">
                         <div className="p-4 pb-2 flex-shrink-0">
                           <div className="flex items-center justify-between">
                             <Skeleton className="w-8 h-8 rounded-lg" />
@@ -461,23 +474,23 @@ function LevelNamePage() {
                 </div>
               </div>
             </div>
-          ) : faculties.length > 0 ? (
-            // Data available - show faculties
+          ) : years.length > 0 ? (
+            // Data available - show years
             <div
               ref={parentRef}
               className="h-full overflow-y-auto scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 scrollbar-thumb-rounded-full"
               style={{ height: "calc(100vh - 200px)" }}
             >
               <div className="lg:hidden py-4">
-                <MobileFacultyList
-                  faculties={faculties}
-                  editingFaculty={editingFaculty}
+                <MobileYearList
+                  years={years}
+                  editingYear={editingYear}
                   editForm={editForm}
                   handleEditSubmit={handleEditSubmit}
                   handleUpdate={handleUpdate}
                   handleDelete={handleDelete}
                   handleVisit={handleVisit}
-                  setEditingFaculty={setEditingFaculty}
+                  setEditingYear={setEditingYear}
                   editFormReset={() => editForm.reset()}
                   creating={creating}
                   updating={updating}
@@ -489,15 +502,15 @@ function LevelNamePage() {
               </div>
 
               <div className="hidden lg:block py-4">
-                <DesktopFacultyGrid
-                  faculties={faculties}
-                  editingFaculty={editingFaculty}
+                <DesktopYearGrid
+                  years={years}
+                  editingYear={editingYear}
                   editForm={editForm}
                   handleEditSubmit={handleEditSubmit}
                   handleUpdate={handleUpdate}
                   handleDelete={handleDelete}
                   handleVisit={handleVisit}
-                  setEditingFaculty={setEditingFaculty}
+                  setEditingYear={setEditingYear}
                   editFormReset={() => editForm.reset()}
                   creating={creating}
                   updating={updating}
@@ -513,15 +526,15 @@ function LevelNamePage() {
             <div className="flex items-center justify-center h-full min-h-[300px] p-4 sm:p-6">
               <div className="text-center max-w-sm">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-                  <Building2 className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
+                  <Clock className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
                 </div>
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2 sm:mb-3">
-                  {searchTerm ? "No matching faculties found" : "No faculties yet"}
+                  {searchTerm ? "No matching years found" : "No years yet"}
                 </h3>
                 <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
                   {searchTerm
-                    ? `No faculties match "${searchTerm}". Try adjusting your search.`
-                    : "Create your first faculty to get started with examples like computer-information-systems, bachelor-of-computer-science."}
+                    ? `No years match "${searchTerm}". Try adjusting your search.`
+                    : "Create your first year to get started with examples like first-year, second-year, third-year."}
                 </p>
                 {searchTerm && (
                   <Button
@@ -542,4 +555,4 @@ function LevelNamePage() {
   )
 }
 
-export default LevelNamePage
+export default YearListpage
