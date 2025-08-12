@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useMemo, useCallback, useRef} from "react"
+import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -76,7 +76,18 @@ function LevelNamePage() {
   const levelName = useLevelName()
   const { data: levelFaculty,error, isLoading,  refetch } = useGetLevelFaculty("academic", levelName)
   
-
+  // Debug logging
+  useEffect(() => {
+    console.log("LevelNamePage Debug:", {
+      levelName,
+      levelFaculty,
+      isLoading,
+      error,
+      facultiesCount: levelFaculty?.faculties?.length || 0,
+      success: levelFaculty?.success,
+      errorMessage: levelFaculty?.error
+    });
+  }, [levelName, levelFaculty, isLoading, error]);
 
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -92,11 +103,22 @@ function LevelNamePage() {
   const faculties = useMemo(() => {
     // Check if levelFaculty exists and has success: true
     if (!levelFaculty || levelFaculty.success !== true) {
+      console.log("No valid levelFaculty data:", { levelFaculty });
       return [];
     }
 
-    // Ensure we have a valid array of faculties
-    const allFaculties = Array.isArray(levelFaculty.faculties) ? levelFaculty.faculties : [];
+    // Ensure we have a valid array of faculties - handle different possible structures
+    let allFaculties: FacultyResponse[] = [];
+    if (Array.isArray(levelFaculty.faculties)) {
+      allFaculties = levelFaculty.faculties;
+    } else if (levelFaculty.faculties && typeof levelFaculty.faculties === 'object') {
+      // If it's an object, try to extract the array
+      const possibleArray = Object.values(levelFaculty.faculties).find(val => Array.isArray(val));
+      if (possibleArray) {
+        allFaculties = possibleArray as FacultyResponse[];
+      }
+    }
+    
     console.log("Processing faculties:", allFaculties);
     console.log("Search term:", searchTerm);
     console.log("Sort by:", sortBy);

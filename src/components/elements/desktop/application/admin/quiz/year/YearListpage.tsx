@@ -113,11 +113,22 @@ function YearListpage() {
   const years = useMemo(() => {
     // Check if academicYear exists and has success: true
     if (!academicYear || academicYear.success !== true) {
+      console.log("No valid academicYear data:", { academicYear });
       return [];
     }
 
-    // Ensure we have a valid array of years
-    const allYears = Array.isArray(academicYear.years) ? academicYear.years : [];
+    // Ensure we have a valid array of years - handle different possible structures
+    let allYears: YearResponse[] = [];
+    if (Array.isArray(academicYear.years)) {
+      allYears = academicYear.years;
+    } else if (academicYear.years && typeof academicYear.years === 'object') {
+      // If it's an object, try to extract the array
+      const possibleArray = Object.values(academicYear.years).find(val => Array.isArray(val));
+      if (possibleArray) {
+        allYears = possibleArray as YearResponse[];
+      }
+    }
+    
     console.log("Processing years:", allYears);
     console.log("Search term:", searchTerm);
     console.log("Sort by:", sortBy);
