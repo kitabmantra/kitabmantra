@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useMemo, useCallback, useRef } from "react"
+import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -71,7 +71,19 @@ interface FacultyResponse {
 
 function LevelNamePage() {
   const levelName = useLevelName()
-  const { data: levelFaculty, isLoading, error } = useGetLevelFaculty("academic", levelName)
+  const { data: levelFaculty, isLoading, error, refetch } = useGetLevelFaculty("academic", levelName)
+  
+  // Debug logging
+  useEffect(() => {
+    console.log("LevelNamePage Debug:", {
+      levelName,
+      levelFaculty,
+      isLoading,
+      error,
+      facultiesCount: levelFaculty?.faculties?.length || 0
+    });
+  }, [levelName, levelFaculty, isLoading, error]);
+
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [updating, setUpdating] = useState(false)
@@ -83,10 +95,15 @@ function LevelNamePage() {
   const parentRef = useRef<HTMLDivElement>(null)
 
   const faculties = useMemo(() => {
-    const allFaculties = levelFaculty?.faculties || []
-    if (!searchTerm) return allFaculties
+    // Ensure we have a valid array of faculties
+    const allFaculties = Array.isArray(levelFaculty?.faculties) ? levelFaculty.faculties : [];
+    console.log("Processing faculties:", allFaculties);
+    
+    if (!searchTerm) return allFaculties;
+    
     return allFaculties.filter((faculty: FacultyResponse) =>
-      faculty.faculty.toLowerCase().includes(searchTerm.toLowerCase()))
+      faculty.faculty.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   }, [levelFaculty, searchTerm])
 
   const form = useForm<FacultyFormValues>({
@@ -118,7 +135,8 @@ function LevelNamePage() {
           toast.success("Faculty created successfully!")
           form.reset()
           setShowCreateForm(false)
-          queryClient.invalidateQueries({ queryKey: ["get-level-faculty"] })
+          // Invalidate with the correct query key
+          queryClient.invalidateQueries({ queryKey: ["get-level-faculty", "academic", levelName] })
         } else {
           toast.error(res.error || "Failed to create faculty. Please try again.")
         }
@@ -131,7 +149,6 @@ function LevelNamePage() {
     [creating, form, queryClient, levelName]
   )
 
- 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value
@@ -174,7 +191,8 @@ function LevelNamePage() {
         const res = await deleteFaculty(faculty.id)
         if (res.success) {
           toast.success(`"${faculty.faculty}" deleted successfully`)
-          queryClient.invalidateQueries({ queryKey: ["get-level-faculty"] })
+          // Invalidate with the correct query key
+          queryClient.invalidateQueries({ queryKey: ["get-level-faculty", "academic", levelName] })
         } else {
           toast.error(res.error || "Failed to delete faculty")
         }
@@ -185,7 +203,7 @@ function LevelNamePage() {
         setDeleting(false)
       }
     },
-    [queryClient]
+    [queryClient, levelName]
   )
 
   const handleUpdate = useCallback(
@@ -214,7 +232,8 @@ function LevelNamePage() {
         const res = await updateFaculty(updateData)
         if (res.success) {
           toast.success(`"${editingFaculty.faculty}" updated successfully`)
-          queryClient.invalidateQueries({ queryKey: ["get-level-faculty"] })
+          // Invalidate with the correct query key
+          queryClient.invalidateQueries({ queryKey: ["get-level-faculty", "academic", levelName] })
           setEditingFaculty(null)
           editForm.reset()
         } else {
@@ -226,7 +245,7 @@ function LevelNamePage() {
         setUpdating(false)
       }
     },
-    [editingFaculty, editForm, queryClient]
+    [editingFaculty, editForm, queryClient, levelName]
   )
 
   const handleVisit = useCallback(
@@ -240,17 +259,30 @@ function LevelNamePage() {
     setSearchTerm("")
   }, [])
 
+  const handleRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
   if (error) {
+    console.error("LevelNamePage Error:", error);
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Faculties</h3>
-          <p className="text-gray-600 mb-4">Failed to load faculty data</p>
-          <Button onClick={() => window.location.reload()} variant="outline">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Retry
-          </Button>
+          <p className="text-gray-600 mb-4">
+            {error instanceof Error ? error.message : "Failed to load faculty data"}
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button onClick={handleRefresh} variant="outline">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Retry
+            </Button>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Reload Page
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -327,7 +359,7 @@ function LevelNamePage() {
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={() => window.location.reload()} variant="outline" size="sm" disabled={isLoading}>
+              <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isLoading}>
                 <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
                 Refresh
               </Button>
@@ -412,7 +444,7 @@ function LevelNamePage() {
             <div className="h-full overflow-y-auto" style={{ height: "calc(100vh - 200px)" }}>
               <div className="lg:hidden py-4">
                 <div className="space-y-4">
-                  {Array.from({ length: 8 }).map((_, index) => (
+                  {Array.from({ length: 4}).map((_, index) => (
                     <div
                       key={index}
                       className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg mx-4"
@@ -433,7 +465,7 @@ function LevelNamePage() {
               <div className="hidden lg:block py-4">
                 <div className="px-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {Array.from({ length: 8 }).map((_, index) => (
+                    {Array.from({ length: 4 }).map((_, index) => (
                       <div
                         key={index}
                         className="w-80 h-96 flex flex-col border border-gray-200 rounded-xl shadow-sm bg-white"

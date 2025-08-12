@@ -431,7 +431,7 @@ function YearListpage() {
             <div className="h-full overflow-y-auto" style={{ height: "calc(100vh - 200px)" }}>
               <div className="lg:hidden py-4">
                 <div className="space-y-4">
-                  {Array.from({ length: 8 }).map((_, index) => (
+                  {Array.from({ length: 4 }).map((_, index) => (
                     <div key={index} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg mx-4">
                       <div className="flex items-center gap-4">
                         <Skeleton className="w-10 h-10 rounded-lg" />
@@ -449,7 +449,7 @@ function YearListpage() {
               <div className="hidden lg:block py-4">
                 <div className="px-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {Array.from({ length: 8 }).map((_, index) => (
+                    {Array.from({ length: 4 }).map((_, index) => (
                       <div key={index} className="w-80 h-96 flex flex-col border border-gray-200 rounded-xl shadow-sm bg-white">
                         <div className="p-4 pb-2 flex-shrink-0">
                           <div className="flex items-center justify-between">
