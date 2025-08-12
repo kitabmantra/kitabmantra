@@ -185,6 +185,11 @@ function DesktopFacultyCard({
                 placeholder="Faculty code (e.g., computer-information-systems)"
                 disabled={updating}
                 autoFocus
+                ref={(el) => {
+                  if (el && editingFaculty?.id === faculty.id) {
+                    setTimeout(() => el.focus(), 100)
+                  }
+                }}
               />
               {editForm.watch("faculty") && (
                 <p className="text-xs text-gray-500 mt-1">

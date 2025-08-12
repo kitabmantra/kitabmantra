@@ -126,6 +126,11 @@ function MobileYearItem({
                 placeholder="Year name (e.g., first-year)"
                 disabled={updating}
                 autoFocus
+                ref={(el) => {
+                  if (el && editingYear?.id === year.id) {
+                    setTimeout(() => el.focus(), 100)
+                  }
+                }}
               />
               {editForm.watch("yearName") && (
                 <p className="text-xs text-gray-500 mt-1">

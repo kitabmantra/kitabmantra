@@ -23,13 +23,13 @@ export async function GET(req : NextRequest){
         const url = await getBackendUrl();
         const res = await axios.get(`${url}/api/v1/faculty-service/get-academic-faculty/${typeName}/${levelName}`)
         const data = res.data;
+        console.log("data in getting the data : ",data)
         if(!data.success){
             throw new Error(data.error)
         }
         if(data.success && data.faculties=== null){
             data.faculties = []
         }
-        console.log("data in getting the data : ",data)
         return NextResponse.json(data,{status:200})
     } catch (error) {
         error = getErrorMessage(error)

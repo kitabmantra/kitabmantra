@@ -10,10 +10,22 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Eye, Save } from "lucide-react";
+import { ArrowLeft, Eye, Save, X, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import AIGenerationDropdown from "./AIGenerationDropdown";
 import FileImportDialog from './FileImportDialog';
+
+interface QuestionData {
+    question: string;
+    options: string[];
+    correctAnswer: number;
+    difficulty: 'easy' | 'medium' | 'hard';
+    hint?: string;
+    referenceUrl?: string;
+    tags: string[];
+    priority: number;
+    subjectName : string
+}
 
 function CreateQuestionYearPage() {
     const yearName = useYearName();
@@ -21,16 +33,19 @@ function CreateQuestionYearPage() {
     const facultyName = useFacultyName();
     const router = useRouter();
     
-    const [questionData, setQuestionData] = useState({
+    const [questionData, setQuestionData] = useState<QuestionData>({
         question: '',
         options: ['', '', '', ''],
-        correctAnswer: 0,
+        correctAnswer: -1,
         difficulty: 'medium',
         hint: '',
         referenceUrl: '',
-        tags: ''
+        tags: [],
+        priority: 3,
+        subjectName : "",
     });
     
+    const [tagInput, setTagInput] = useState('');
     const [showFileImport, setShowFileImport] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
 
@@ -44,7 +59,7 @@ function CreateQuestionYearPage() {
 
     const handleOptionChange = (index: number, value: string) => {
         const newOptions = [...questionData.options];
-        newOptions[index] = value;
+        newOptions[index] = value.toLowerCase();
         setQuestionData({ ...questionData, options: newOptions });
     };
 
@@ -52,19 +67,96 @@ function CreateQuestionYearPage() {
         setQuestionData({ ...questionData, correctAnswer: index });
     };
 
+    const formatTagInput = (input: string): string => {
+        const  formatted = input
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-zA-Z0-9\-_]/g, "")
+        return formatted;
+    };
+
+
+    const handleAddTag = () => {
+        const formattedTag = formatTagInput(tagInput);
+        if (formattedTag && formattedTag.length >= 2 && questionData.tags.length < 5) {
+            if (!questionData.tags.includes(formattedTag)) {
+                setQuestionData({
+                    ...questionData,
+                    tags: [...questionData.tags, formattedTag]
+                });
+                setTagInput('');
+            }
+        }
+    };
+
+    const handleRemoveTag = (indexToRemove: number) => {
+        setQuestionData({
+            ...questionData,
+            tags: questionData.tags.filter((_, index) => index !== indexToRemove)
+        });
+    };
+
+    const handleTagInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const formatted = formatTagInput(e.target.value);
+        setTagInput(formatted);
+    };
+
+    const handleTagInputKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleAddTag();
+        }
+    };
+
     const handleSave = () => {
-        // Handle saving the question
-        console.log('Saving question:', questionData);
+        if (!questionData.question.trim()) {
+            alert('Question is required');
+            return;
+        }
+        if (questionData.question.length < 5 || questionData.question.length > 1000) {
+            alert('Question must be between 5 and 1000 characters');
+            return;
+        }
+        if (questionData.options.some(option => !option.trim())) {
+            alert('All options are required');
+            return;
+        }
+        if (questionData.correctAnswer === -1) {
+            alert('Please select a correct answer');
+            return;
+        }
+        if (questionData.tags.length === 0) {
+            alert('At least one tag is required');
+            return;
+        }
+        if (questionData.tags.length > 5) {
+            alert('Maximum 5 tags allowed');
+            return;
+        }
+
+        const backendData = {
+            type: "academic" as const,
+            levelName: levelName,
+            faculty: facultyName,
+            yearName: yearName,
+            question: questionData.question.trim(),
+            options: questionData.options.map(option => option.trim()),
+            correctAnswer: questionData.options[questionData.correctAnswer],
+            difficulty: questionData.difficulty,
+            tags: questionData.tags,
+            priority: questionData.priority,
+            hint: questionData.hint?.trim() || undefined,
+            referenceUrl: questionData.referenceUrl?.trim() || undefined
+        };
+
+        console.log('Saving question:', backendData);
     };
 
     const handleAIGeneration = (type: 'single' | 'multiple') => {
         setIsGenerating(true);
-        
-        // Simulate AI generation
         console.log("Generating question...", type)
         setTimeout(() => {
             setIsGenerating(false);
-            // Handle AI generation result
         }, 2000);
     };
 
@@ -72,29 +164,39 @@ function CreateQuestionYearPage() {
         setShowFileImport(true);
     };
 
+    const formatBreadcrumbText = (text: string) => {
+        return text.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="container mx-auto py-6 px-4">
-                {/* Header */}
-                <div className="mb-6">
-                    <div className="flex items-center gap-4 mb-4">
-                        <Button variant="outline" onClick={handleBack}>
+        <div className="bg-gray-50 min-h-screen">
+            {/* Header */}
+            <div className="bg-white border-b border-gray-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div className="flex items-center gap-4">
+                        <Button variant="outline" onClick={handleBack} size="sm">
                             <ArrowLeft className="w-4 h-4 mr-2" />
                             Back
                         </Button>
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Create Question</h1>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <Badge variant="outline">{levelName}</Badge>
-                                <Badge variant="outline">{facultyName}</Badge>
-                                <Badge variant="outline">{yearName}</Badge>
+                        <div className="flex-1">
+                            <h1 className="text-xl font-bold text-gray-900">Create Question</h1>
+                            <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
+                                <span className="font-medium">Academic</span>
+                                <ChevronRight className="w-4 h-4" />
+                                <span>{formatBreadcrumbText(levelName)}</span>
+                                <ChevronRight className="w-4 h-4" />
+                                <span>{formatBreadcrumbText(facultyName)}</span>
+                                <ChevronRight className="w-4 h-4" />
+                                <span>{formatBreadcrumbText(yearName)}</span>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Main Content - Split Screen */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Main Content */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Left Panel - Question Creation */}
                     <Card>
                         <CardHeader>
@@ -118,7 +220,7 @@ function CreateQuestionYearPage() {
                             {/* Question Text */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Question Text *
+                                    Question Text * (5-1000 characters)
                                 </label>
                                 <Textarea
                                     value={questionData.question}
@@ -126,13 +228,17 @@ function CreateQuestionYearPage() {
                                     placeholder="Enter your question here..."
                                     rows={4}
                                     className="resize-none"
+                                    maxLength={1000}
                                 />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {questionData.question.length}/1000 characters
+                                </p>
                             </div>
 
                             {/* Options */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                                    Answer Options *
+                                    Answer Options * (All 4 required)
                                 </label>
                                 <div className="space-y-3">
                                     {questionData.options.map((option, index) => (
@@ -160,33 +266,119 @@ function CreateQuestionYearPage() {
                                 </div>
                             </div>
 
-                            {/* Difficulty */}
+                            {/* Difficulty and Priority */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Difficulty *
+                                    </label>
+                                    <Select 
+                                        value={questionData.difficulty} 
+                                        onValueChange={(value: 'easy' | 'medium' | 'hard') => setQuestionData({ ...questionData, difficulty: value })}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="easy">Easy</SelectItem>
+                                            <SelectItem value="medium">Medium</SelectItem>
+                                            <SelectItem value="hard">Hard</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Priority *
+                                    </label>
+                                    <Select 
+                                        value={questionData.priority.toString()} 
+                                        onValueChange={(value) => setQuestionData({ ...questionData, priority: parseInt(value) })}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="1">1 - Low</SelectItem>
+                                            <SelectItem value="2">2 - Medium</SelectItem>
+                                            <SelectItem value="3">3 - High</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Subject *
+                                    </label>
+                                    <Input 
+                                        value={questionData.subjectName}
+                                        onChange={(e) =>{
+                                            const formattedSubject = formatTagInput(e.target.value);
+                                            setQuestionData({ ...questionData, subjectName: formattedSubject });
+                                        }}
+                                        placeholder="Enter subject name"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Tags */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Difficulty *
+                                    Tags * (1-5 tags required)
                                 </label>
-                                <Select 
-                                    value={questionData.difficulty} 
-                                    onValueChange={(value) => setQuestionData({ ...questionData, difficulty: value })}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="easy">Easy</SelectItem>
-                                        <SelectItem value="medium">Medium</SelectItem>
-                                        <SelectItem value="hard">Hard</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <div className="space-y-3">
+                                    <div className="flex gap-2">
+                                        <Input
+                                            value={tagInput}
+                                            onChange={handleTagInputChange}
+                                            onKeyPress={handleTagInputKeyPress}
+                                            placeholder="Enter tag (letters, numbers, - or _ only)"
+                                            disabled={questionData.tags.length >= 5}
+                                            className="flex-1"
+                                        />
+                                        <Button 
+                                            type="button" 
+                                            onClick={handleAddTag}
+                                            disabled={!tagInput.trim() || tagInput.length < 2 || questionData.tags.length >= 5}
+                                            size="sm"
+                                            className="px-4"
+                                        >
+                                            Add
+                                        </Button>
+                                    </div>
+                                    {questionData.tags.length > 0 && (
+                                        <div className="flex flex-wrap gap-2">
+                                            {questionData.tags.map((tag, index) => (
+                                                <Badge 
+                                                    key={index} 
+                                                    variant="secondary"
+                                                    className="flex items-center gap-1 bg-blue-100 text-blue-800 hover:bg-blue-200"
+                                                >
+                                                    {tag}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveTag(index)}
+                                                        className="ml-1 hover:text-red-600 transition-colors"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <div className="flex items-center justify-between text-xs text-gray-500">
+                                        <span>{questionData.tags.length}/5 tags</span>
+                                        <span>Only letters, numbers, hyphens (-) and underscores (_) allowed</span>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Hint */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Hint
+                                    Hint (Optional)
                                 </label>
                                 <Textarea
-                                    value={questionData.hint}
+                                    value={questionData.hint || ''}
                                     onChange={(e) => setQuestionData({ ...questionData, hint: e.target.value })}
                                     placeholder="Optional hint for students..."
                                     rows={2}
@@ -197,25 +389,13 @@ function CreateQuestionYearPage() {
                             {/* Reference URL */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Reference URL
+                                    Reference URL (Optional)
                                 </label>
                                 <Input
                                     type="url"
-                                    value={questionData.referenceUrl}
+                                    value={questionData.referenceUrl || ''}
                                     onChange={(e) => setQuestionData({ ...questionData, referenceUrl: e.target.value })}
                                     placeholder="https://example.com/reference"
-                                />
-                            </div>
-
-                            {/* Tags */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Tags
-                                </label>
-                                <Input
-                                    value={questionData.tags}
-                                    onChange={(e) => setQuestionData({ ...questionData, tags: e.target.value })}
-                                    placeholder="Enter tags separated by commas..."
                                 />
                             </div>
                         </CardContent>
@@ -246,16 +426,16 @@ function CreateQuestionYearPage() {
                                         {questionData.options.map((option, index) => (
                                             <div 
                                                 key={index} 
-                                                className={`flex items-center gap-3 p-3 border rounded-lg ${
+                                                className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${
                                                     questionData.correctAnswer === index 
                                                         ? 'border-green-300 bg-green-50' 
-                                                        : 'border-gray-200'
+                                                        : 'border-gray-200 hover:border-gray-300'
                                                 }`}
                                             >
                                                 <span className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium">
                                                     {String.fromCharCode(65 + index)}
                                                 </span>
-                                                <span className="text-gray-700">
+                                                <span className="text-gray-700 flex-1">
                                                     {option || `Option ${String.fromCharCode(65 + index)} will appear here...`}
                                                 </span>
                                                 {questionData.correctAnswer === index && (
@@ -270,13 +450,16 @@ function CreateQuestionYearPage() {
 
                                 {/* Metadata Preview */}
                                 <div className="space-y-3">
-                                    <div className="flex items-center gap-2">
-                                        <Badge variant="outline">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                                             Difficulty: {questionData.difficulty.charAt(0).toUpperCase() + questionData.difficulty.slice(1)}
                                         </Badge>
-                                        {questionData.tags && (
-                                            <Badge variant="outline">
-                                                Tags: {questionData.tags}
+                                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                                            Priority: {questionData.priority}
+                                        </Badge>
+                                        {questionData.tags.length > 0 && (
+                                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                                Tags: {questionData.tags.join(', ')}
                                             </Badge>
                                         )}
                                     </div>

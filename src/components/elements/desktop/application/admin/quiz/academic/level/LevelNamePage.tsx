@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useMemo, useCallback, useRef, useEffect } from "react"
+import { useState, useMemo, useCallback, useRef} from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -17,7 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, Search, BookOpen, TrendingUp, AlertCircle, X, RefreshCw, ArrowLeft, Building2 } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Plus, Search, BookOpen, TrendingUp, AlertCircle, X, RefreshCw, ArrowLeft, Building2, Filter } from "lucide-react"
 import { toast } from "react-hot-toast"
 import {
   createNewFaculty,
@@ -69,25 +70,19 @@ interface FacultyResponse {
   updatedAt: string
 }
 
+type SortOption = "name-asc" | "name-desc" | "created-asc" | "created-desc"
+
 function LevelNamePage() {
   const levelName = useLevelName()
-  const { data: levelFaculty, isLoading, error, refetch } = useGetLevelFaculty("academic", levelName)
+  const { data: levelFaculty,error, isLoading,  refetch } = useGetLevelFaculty("academic", levelName)
   
-  // Debug logging
-  useEffect(() => {
-    console.log("LevelNamePage Debug:", {
-      levelName,
-      levelFaculty,
-      isLoading,
-      error,
-      facultiesCount: levelFaculty?.faculties?.length || 0
-    });
-  }, [levelName, levelFaculty, isLoading, error]);
+
 
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [updating, setUpdating] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [sortBy, setSortBy] = useState<SortOption>("name-asc")
   const [editingFaculty, setEditingFaculty] = useState<FacultyResponse | null>(null)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const queryClient = useQueryClient()
@@ -95,16 +90,46 @@ function LevelNamePage() {
   const parentRef = useRef<HTMLDivElement>(null)
 
   const faculties = useMemo(() => {
+    // Check if levelFaculty exists and has success: true
+    if (!levelFaculty || levelFaculty.success !== true) {
+      return [];
+    }
+
     // Ensure we have a valid array of faculties
-    const allFaculties = Array.isArray(levelFaculty?.faculties) ? levelFaculty.faculties : [];
+    const allFaculties = Array.isArray(levelFaculty.faculties) ? levelFaculty.faculties : [];
     console.log("Processing faculties:", allFaculties);
+    console.log("Search term:", searchTerm);
+    console.log("Sort by:", sortBy);
     
-    if (!searchTerm) return allFaculties;
+    // First filter by search term
+    let filtered = allFaculties;
+    if (searchTerm.trim()) {
+      filtered = allFaculties.filter((faculty: FacultyResponse) => {
+        const facultyName = faculty.faculty.toLowerCase();
+        const searchLower = searchTerm.toLowerCase();
+        return facultyName.includes(searchLower);
+      });
+    }
     
-    return allFaculties.filter((faculty: FacultyResponse) =>
-      faculty.faculty.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [levelFaculty, searchTerm])
+    // Then sort the filtered results
+    const sorted = [...filtered].sort((a: FacultyResponse, b: FacultyResponse) => {
+      switch (sortBy) {
+        case "name-asc":
+          return a.faculty.localeCompare(b.faculty);
+        case "name-desc":
+          return b.faculty.localeCompare(a.faculty);
+        case "created-asc":
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case "created-desc":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        default:
+          return 0;
+      }
+    });
+    
+    console.log("Filtered and sorted faculties:", sorted);
+    return sorted;
+  }, [levelFaculty, searchTerm, sortBy])
 
   const form = useForm<FacultyFormValues>({
     resolver: zodResolver(facultySchema),
@@ -178,9 +203,8 @@ function LevelNamePage() {
 
   const stats = useMemo(() => {
     const total = faculties.length
-    const academic = faculties.filter((f: FacultyResponse) => f.type === "academic").length
-    const entrance = faculties.filter((f: FacultyResponse) => f.type === "entrance").length
-    return { total, academic, entrance }
+    // Since all faculties are academic, we don't need to filter by type
+    return { total, academic: total, entrance: 0 }
   }, [faculties])
 
   // Action handlers
@@ -197,8 +221,7 @@ function LevelNamePage() {
           toast.error(res.error || "Failed to delete faculty")
         }
       } catch (error) {
-        toast.error("Failed to delete faculty")
-        console.error("Error deleting faculty:", error)
+        toast.error(error as string || "Failed to delete faculty")
       } finally {
         setDeleting(false)
       }
@@ -228,6 +251,7 @@ function LevelNamePage() {
         const updateData: UpdateFacultyProps = {
           id: editingFaculty.id,
           faculty: values.faculty,
+          oldName: editingFaculty.faculty,
         }
         const res = await updateFaculty(updateData)
         if (res.success) {
@@ -263,8 +287,8 @@ function LevelNamePage() {
     refetch();
   }, [refetch]);
 
+  // Handle API error (network error, etc.)
   if (error) {
-    console.error("LevelNamePage Error:", error);
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
@@ -272,6 +296,31 @@ function LevelNamePage() {
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Faculties</h3>
           <p className="text-gray-600 mb-4">
             {error instanceof Error ? error.message : "Failed to load faculty data"}
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button onClick={handleRefresh} variant="outline">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Retry
+            </Button>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Reload Page
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Handle backend error (success: false)
+  if (levelFaculty && levelFaculty.success === false) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Faculties</h3>
+          <p className="text-gray-600 mb-4">
+            {levelFaculty.error || "Failed to load faculty data from server"}
           </p>
           <div className="flex gap-2 justify-center">
             <Button onClick={handleRefresh} variant="outline">
@@ -359,13 +408,29 @@ function LevelNamePage() {
             </div>
 
             <div className="flex gap-2">
+              {/* Sort Filter */}
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-gray-500" />
+                <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+                  <SelectTrigger className="w-40 h-9">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name-asc">Name A-Z</SelectItem>
+                    <SelectItem value="name-desc">Name Z-A</SelectItem>
+                    <SelectItem value="created-asc">Oldest First</SelectItem>
+                    <SelectItem value="created-desc">Newest First</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isLoading}>
                 <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
                 Refresh
               </Button>
               <Button
                 className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 font-medium rounded-lg shadow-sm transition-all duration-200 hover:shadow-md h-9 text-sm sm:text-base"
-                disabled={creating || updating || deleting}
+                disabled={creating || updating || deleting || (isLoading && !levelFaculty)}
                 onClick={() => setShowCreateForm(true)}
               >
                 <Plus className="w-4 h-4 mr-1 sm:mr-2" />
@@ -381,7 +446,7 @@ function LevelNamePage() {
       <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Create New Faculty</DialogTitle>
+            <DialogTitle >Create New Faculty</DialogTitle>
             <DialogDescription>
               Add a new academic faculty to the level. Examples: Computer Information Systems (CIS), Bachelor of
               Computer Science (BCS), Information Technology (IT)
@@ -402,6 +467,12 @@ function LevelNamePage() {
                         onChange={handleInputChange}
                         disabled={creating}
                         className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-colors"
+                        autoFocus
+                        ref={(el) => {
+                          if (el && showCreateForm) {
+                            setTimeout(() => el.focus(), 100)
+                          }
+                        }}
                       />
                     </FormControl>
                     {field.value && (

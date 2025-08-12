@@ -7,6 +7,7 @@ import axios from "axios"
 export interface UpdateFacultyProps{
     id : string 
     faculty : string
+    oldName : string
 }
 
 export const updateFaculty = async(props : UpdateFacultyProps) =>{

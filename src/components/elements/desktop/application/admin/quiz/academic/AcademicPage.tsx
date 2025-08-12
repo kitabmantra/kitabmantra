@@ -198,11 +198,11 @@ function AcademicManagementPage() {
     const trimmed = value.trim()
     // Convert to lowercase and replace spaces with hyphens
     const formatted = trimmed
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-zA-Z0-9\-_]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-zA-Z0-9\-_]/g, "")
     // Remove hyphens from start and end
-    return formatted.replace(/^-+|-+$/g, "")
+    return formatted
   }, [])
 
   const stats = useMemo(() => {
@@ -255,6 +255,7 @@ function AcademicManagementPage() {
           id: editingCategory.id,
           levelName: values.levelName,
           type: editingCategory.type,
+          oldName : editingCategory.levelName
         }
         const res = await updateAcademicLevel(updateData)
         if (res.success) {
@@ -364,7 +365,7 @@ function AcademicManagementPage() {
 
             <Button
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 font-medium rounded-lg shadow-sm transition-all duration-200 hover:shadow-md h-9 text-sm sm:text-base"
-              disabled={creating || updating || deleting || isLoading}
+              disabled={creating || updating || deleting || (isLoading && !academicCategory)}
               onClick={() => setShowCreateForm(!showCreateForm)}
             >
               <Plus className="w-4 h-4 mr-1 sm:mr-2" />

@@ -8,7 +8,8 @@ import { getBackendUrl } from "@/lib/utils/get-backend-url"
 export type UpdateAcademicLevelType = {
     id : string,
     levelName : string,
-    type : "academic" | "entrance"
+    type : "academic" | "entrance",
+    oldName : string
 }
 
 export const updateAcademicLevel = async (values : UpdateAcademicLevelType) => {
@@ -17,7 +18,8 @@ export const updateAcademicLevel = async (values : UpdateAcademicLevelType) => {
         if(!session) throw new Error("Unauthorized")
             const formData = {
                 levelName : values.levelName,
-                type : values.type
+                type : values.type,
+                oldName : values.oldName
         }
         const url = await getBackendUrl();
         const res = await axios.put(`${url}/api/v1/category-service/update-academic-level-category/${values.id}`,formData)

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useMemo, useCallback, useRef } from "react"
+import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -16,14 +16,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, Search, Calendar, TrendingUp, AlertCircle, X, RefreshCw, ArrowLeft, Clock } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Plus, Search, Calendar, TrendingUp, AlertCircle, X, RefreshCw, ArrowLeft, Clock, Filter } from "lucide-react"
 import { toast } from "react-hot-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { useFacultyName } from '@/lib/hooks/params/useFaucltyName'
 import { useLevelName } from '@/lib/hooks/params/useLevelName'
 import { Skeleton } from "@/components/ui/skeleton"
 import { useRouter } from "next/navigation"
-import { redirect } from 'next/navigation'
 import { useGetAcademicYear } from "@/lib/hooks/tanstack-query/query-hook/quiz/academic/year/use-get-academic-year"
 import { createYear, type CreateYearRequestType } from "@/lib/actions/quiz/year/post/create-year"
 import { updateYear, type UpdateYearRequestType } from "@/lib/actions/quiz/year/put/update-year"
@@ -74,37 +74,83 @@ export interface GetYearQueryType {
     faculty : string
 }
 
+type SortOption = "name-asc" | "name-desc" | "created-asc" | "created-desc"
+
 function YearListpage() {
   const facultyName = useFacultyName()
   const levelName = useLevelName()
-  const { data: academicYear, isLoading, error } = useGetAcademicYear({
+  const { data: academicYear, isLoading, error, refetch } = useGetAcademicYear({
     typeName : "academic",
     levelName : levelName,
     faculty : facultyName
   })
+  
+  // Debug logging
+  useEffect(() => {
+    console.log("YearListpage Debug:", {
+      levelName,
+      facultyName,
+      academicYear,
+      isLoading,
+      error,
+      yearsCount: academicYear?.years?.length || 0,
+      success: academicYear?.success,
+      errorMessage: academicYear?.error
+    });
+  }, [levelName, facultyName, academicYear, isLoading, error]);
+
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [updating, setUpdating] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [sortBy, setSortBy] = useState<SortOption>("name-asc")
   const [editingYear, setEditingYear] = useState<YearResponse | null>(null)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const queryClient = useQueryClient()
   const router = useRouter()
-
   const parentRef = useRef<HTMLDivElement>(null)
 
-  // Redirect if no faculty or level name
-  if (!facultyName || !levelName) {
-    redirect("/quiz-section/academic")
-  }
-
   const years = useMemo(() => {
-    const allYears = academicYear?.years || []
-    if (!searchTerm) return allYears
-    return allYears.filter((year: YearResponse) =>
-      year.yearName.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [academicYear, searchTerm])
+    // Check if academicYear exists and has success: true
+    if (!academicYear || academicYear.success !== true) {
+      return [];
+    }
+
+    // Ensure we have a valid array of years
+    const allYears = Array.isArray(academicYear.years) ? academicYear.years : [];
+    console.log("Processing years:", allYears);
+    console.log("Search term:", searchTerm);
+    console.log("Sort by:", sortBy);
+    
+    // First filter by search term
+    let filtered = allYears;
+    if (searchTerm.trim()) {
+      filtered = allYears.filter((year: YearResponse) => {
+        const yearName = year.yearName.toLowerCase();
+        const searchLower = searchTerm.toLowerCase();
+        return yearName.includes(searchLower);
+      });
+    }
+    
+    // Then sort the filtered results
+    const sorted = [...filtered].sort((a: YearResponse, b: YearResponse) => {
+      switch (sortBy) {
+        case "name-asc":
+          return a.yearName.localeCompare(b.yearName);
+        case "name-desc":
+          return b.yearName.localeCompare(a.yearName);
+        case "created-asc":
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case "created-desc":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        default:
+          return 0;
+      }
+    });
+    
+    console.log("Filtered and sorted years:", sorted);
+    return sorted;
+  }, [academicYear, searchTerm, sortBy])
 
   const form = useForm<YearFormValues>({
     resolver: zodResolver(yearSchema),
@@ -136,7 +182,8 @@ function YearListpage() {
           toast.success("Year created successfully!")
           form.reset()
           setShowCreateForm(false)
-          queryClient.invalidateQueries({ queryKey: ["get-academic-year"] })
+          // Invalidate with the correct query key
+          queryClient.invalidateQueries({ queryKey: ["get-academic-year", "academic", levelName, facultyName] })
         } else {
           toast.error(res.error as string || "Failed to create year. Please try again.")
         }
@@ -178,9 +225,8 @@ function YearListpage() {
 
   const stats = useMemo(() => {
     const total = years.length
-    const academic = years.filter((y: YearResponse) => y.typeName === "academic").length
-    const entrance = years.filter((y: YearResponse) => y.typeName === "entrance").length
-    return { total, academic, entrance }
+    // Since all years are academic, we don't need to filter by type
+    return { total, academic: total, entrance: 0 }
   }, [years])
 
   // Action handlers
@@ -194,7 +240,8 @@ function YearListpage() {
         const res = await deleteYear(deleteData)
         if (res.success) {
           toast.success(`"${year.yearName}" deleted successfully`)
-          queryClient.invalidateQueries({ queryKey: ["get-academic-year"] })
+          // Invalidate with the correct query key
+          queryClient.invalidateQueries({ queryKey: ["get-academic-year", "academic", levelName, facultyName] })
         } else {
           toast.error(res.error || "Failed to delete year")
         }
@@ -205,7 +252,7 @@ function YearListpage() {
         setDeleting(false)
       }
     },
-    [queryClient]
+    [queryClient, levelName, facultyName]
   )
 
   const handleUpdate = useCallback(
@@ -234,7 +281,8 @@ function YearListpage() {
         const res = await updateYear(updateData)
         if (res.success) {
           toast.success(`"${editingYear.yearName}" updated successfully`)
-          queryClient.invalidateQueries({ queryKey: ["get-academic-year"] })
+          // Invalidate with the correct query key
+          queryClient.invalidateQueries({ queryKey: ["get-academic-year", "academic", levelName, facultyName] })
           setEditingYear(null)
           editForm.reset()
         } else {
@@ -246,7 +294,7 @@ function YearListpage() {
         setUpdating(false)
       }
     },
-    [editingYear, editForm, queryClient]
+    [editingYear, editForm, queryClient, levelName, facultyName]
   )
 
   const handleVisit = useCallback(
@@ -260,17 +308,56 @@ function YearListpage() {
     setSearchTerm("")
   }, [])
 
+  const handleRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
+  // Handle API error (network error, etc.)
   if (error) {
+    console.error("YearListpage Error:", error);
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Years</h3>
-          <p className="text-gray-600 mb-4">Failed to load year data</p>
-          <Button onClick={() => window.location.reload()} variant="outline">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Retry
-          </Button>
+          <p className="text-gray-600 mb-4">
+            {error instanceof Error ? error.message : "Failed to load year data"}
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button onClick={handleRefresh} variant="outline">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Retry
+            </Button>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Reload Page
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Handle backend error (success: false)
+  if (academicYear && academicYear.success === false) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Years</h3>
+          <p className="text-gray-600 mb-4">
+            {academicYear.error || "Failed to load year data from server"}
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button onClick={handleRefresh} variant="outline">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Retry
+            </Button>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Reload Page
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -347,7 +434,23 @@ function YearListpage() {
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={() => window.location.reload()} variant="outline" size="sm" disabled={isLoading}>
+              {/* Sort Filter */}
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-gray-500" />
+                <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+                  <SelectTrigger className="w-40 h-9">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name-asc">Name A-Z</SelectItem>
+                    <SelectItem value="name-desc">Name Z-A</SelectItem>
+                    <SelectItem value="created-asc">Oldest First</SelectItem>
+                    <SelectItem value="created-desc">Newest First</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isLoading}>
                 <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
                 Refresh
               </Button>
@@ -389,6 +492,12 @@ function YearListpage() {
                         onChange={handleInputChange}
                         disabled={creating}
                         className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-colors"
+                        autoFocus
+                        ref={(el) => {
+                          if (el && showCreateForm) {
+                            setTimeout(() => el.focus(), 100)
+                          }
+                        }}
                       />
                     </FormControl>
                     {field.value && (
