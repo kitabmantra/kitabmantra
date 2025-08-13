@@ -6,7 +6,7 @@ import { getErrorMessage } from "@/lib/utils/get-error";
 export const fetchAcademicYear = async (data: GetYearQueryType) => {
   try {
     const response = await axios.get(`/api/get/cateogry/academic/year?typeName=${data.typeName}&levelName=${data.levelName}&faculty=${data.faculty}`);
-    return response.data.data;
+    return response.data;
   } catch (error) {
     const errorMessage = getErrorMessage(error)
     return {
