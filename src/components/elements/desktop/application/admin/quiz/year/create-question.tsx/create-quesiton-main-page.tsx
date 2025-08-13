@@ -19,7 +19,7 @@ import { CreateQuesitonForBackend, CreateQuestionRequestType } from "@/lib/actio
 import { useYearName } from "@/lib/hooks/params/useYearName"
 import { useLevelName } from "@/lib/hooks/params/useLevelName"
 import { useFacultyName } from "@/lib/hooks/params/useFaucltyName"
-
+import { useQueryClient } from "@tanstack/react-query"
 
 
 const getErrorMessage = (error: any) => {
@@ -40,6 +40,8 @@ export default function CreateQuestionPage() {
   const [questions, setQuestions] = useState<QuestionData[]>([])
   const [manualQuestions, setManualQuestions] = useState<QuestionData[]>([])
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
+
+  const queryClient = useQueryClient()
 
   const [questionData, setQuestionData] = useState<QuestionData>({
     question: "",
@@ -209,7 +211,12 @@ export default function CreateQuestionPage() {
         toast.success("Questions saved successfully")
         setManualQuestions([])
         router.push(`/quiz-section/academic/level/${levelName}/faculty/${facultyName}/${yearName}`)
-
+        queryClient.invalidateQueries({ queryKey: ["get-academic-questions",{
+         search: "",
+         yearName,
+         faculty: facultyName,
+         levelName,
+        }, 100] })
       } else if (!res.success && res.error) {
         const error = getErrorMessage(res.error)
         toast.error(error)
