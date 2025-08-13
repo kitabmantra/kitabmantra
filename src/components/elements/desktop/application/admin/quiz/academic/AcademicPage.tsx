@@ -32,6 +32,7 @@ import {
   Eye,
   X,
   RefreshCw,
+  ArrowLeft,
 } from "lucide-react"
 import { toast } from "react-hot-toast"
 import { createAcademicLevel, type CreateAcademicLevel } from "@/lib/actions/quiz/academic/post/create-level"
@@ -309,8 +310,31 @@ function AcademicManagementPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Academic Level Management</h1>
-              <p className="text-sm sm:text-base text-gray-600 mt-1">Create and organize educational content levels</p>
+              <div className="flex items-center gap-3 mb-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => router.push('/quiz-section')} 
+                  className="p-2 hover:bg-gray-100"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Academic Level Management</h1>
+                  <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                    <button
+                      onClick={() => router.push('/quiz-section')}
+                      className="hover:text-blue-600 hover:underline transition-colors"
+                    >
+                      Quiz Section
+                    </button>
+                    <span>•</span>
+                    <span className="text-blue-600 font-medium underline">
+                      Academic
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Stats Cards - Mobile Responsive */}

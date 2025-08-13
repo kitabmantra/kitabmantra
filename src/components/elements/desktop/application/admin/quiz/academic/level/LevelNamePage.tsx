@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useMemo, useCallback, useRef, useEffect } from "react"
+import { useState, useMemo, useCallback,  useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Search, BookOpen, TrendingUp, AlertCircle, X, RefreshCw, ArrowLeft, Building2, Filter } from "lucide-react"
+import { Plus, Search, BookOpen, TrendingUp, AlertCircle, X, RefreshCw, ArrowLeft, Building2, Filter, Eye, Edit, Trash2 } from "lucide-react"
 import { toast } from "react-hot-toast"
 import {
   createNewFaculty,
@@ -30,8 +30,17 @@ import { useLevelName } from "@/lib/hooks/params/useLevelName"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useRouter } from "next/navigation"
 import { updateFaculty, type UpdateFacultyProps } from "@/lib/actions/quiz/academic/faculty/put/update-faculty"
-import { DesktopFacultyGrid } from "@/components/elements/desktop/application/admin/quiz/faculty/desktop-faculty.grid"
-import { MobileFacultyList } from "@/components/elements/desktop/application/admin/quiz/faculty/mobile-faculty-list"
+import { Badge } from "@/components/ui/badge"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 // Enhanced validation schema
 const facultySchema = z.object({
@@ -96,9 +105,9 @@ function LevelNamePage() {
   const [sortBy, setSortBy] = useState<SortOption>("name-asc")
   const [editingFaculty, setEditingFaculty] = useState<FacultyResponse | null>(null)
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [deletingFaculty, setDeletingFaculty] = useState<FacultyResponse | null>(null)
   const queryClient = useQueryClient()
   const router = useRouter()
-  const parentRef = useRef<HTMLDivElement>(null)
 
   const faculties = useMemo(() => {
     // Check if levelFaculty exists and has success: true
@@ -231,12 +240,21 @@ function LevelNamePage() {
 
   // Action handlers
   const handleDelete = useCallback(
-    async (faculty: FacultyResponse) => {
+    (faculty: FacultyResponse) => {
+      setDeletingFaculty(faculty)
+    },
+    []
+  )
+
+  const handleConfirmDelete = useCallback(
+    async () => {
+      if (!deletingFaculty) return
+      
       try {
         setDeleting(true)
-        const res = await deleteFaculty(faculty.id)
+        const res = await deleteFaculty(deletingFaculty.id)
         if (res.success) {
-          toast.success(`"${faculty.faculty}" deleted successfully`)
+          toast.success(`"${deletingFaculty.faculty}" deleted successfully`)
           // Invalidate with the correct query key
           queryClient.invalidateQueries({ queryKey: ["get-level-faculty", "academic", levelName] })
         } else {
@@ -246,9 +264,10 @@ function LevelNamePage() {
         toast.error(error as string || "Failed to delete faculty")
       } finally {
         setDeleting(false)
+        setDeletingFaculty(null)
       }
     },
-    [queryClient, levelName]
+    [deletingFaculty, queryClient, levelName]
   )
 
   const handleUpdate = useCallback(
@@ -367,14 +386,28 @@ function LevelNamePage() {
           <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <Button variant="ghost" size="sm" onClick={() => router.back()} className="p-2 hover:bg-gray-100">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => router.push('/quiz-section/academic')} 
+                  className="p-2 hover:bg-gray-100"
+                >
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Faculty Management</h1>
-                  <p className="text-sm sm:text-base text-gray-600 mt-1">
-                    Academic &gt; {levelName.replace(/-/g, " ")}
-                  </p>
+                  <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                    <button
+                      onClick={() => router.push('/quiz-section/academic')}
+                      className="hover:text-blue-600 hover:underline transition-colors"
+                    >
+                      Academic
+                    </button>
+                    <span>•</span>
+                    <span className="text-blue-600 font-medium underline capitalize">
+                      {levelName.replace(/-/g, " ")}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -530,17 +563,111 @@ function LevelNamePage() {
         </DialogContent>
       </Dialog>
 
+      {/* Edit Faculty Dialog */}
+      <Dialog open={!!editingFaculty} onOpenChange={(open) => !open && setEditingFaculty(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Faculty</DialogTitle>
+            <DialogDescription>
+              Update the faculty name. Current: {editingFaculty?.faculty.replace(/-/g, " ")}
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="faculty"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Faculty Code/Abbreviation</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., computer-information-systems, bachelor-of-computer-science"
+                        value={field.value}
+                        onChange={handleEditInputChange}
+                        disabled={updating}
+                        className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-colors"
+                        autoFocus
+                        ref={(el) => {
+                          if (el && editingFaculty) {
+                            setTimeout(() => el.focus(), 100)
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    {field.value && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Formatted: <span className="font-mono text-blue-600">{field.value}</span>
+                      </p>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setEditingFaculty(null)
+                    editForm.reset()
+                  }}
+                  disabled={updating}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updating} className="bg-green-600 hover:bg-green-700 text-white">
+                  {updating ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  ) : null}
+                  {updating ? "Updating..." : "Update Faculty"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingFaculty} onOpenChange={(open) => !open && setDeletingFaculty(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the faculty{" "}
+              <span className="font-semibold text-red-600">
+              &quot;{deletingFaculty?.faculty.replace(/-/g, " ")}&quot;
+              </span>{" "}
+              and all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={deleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleting ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+              ) : null}
+              {deleting ? "Deleting..." : "Delete Faculty"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="flex-1 overflow-hidden">
         <div className="max-w-screen-2xl mx-auto h-full">
           {isLoading ? (
-            // Loading state - show simple skeletons without virtualizer
-            <div className="h-full overflow-y-auto" style={{ height: "calc(100vh - 200px)" }}>
-              <div className="lg:hidden py-4">
+            // Loading state - show simple skeletons
+            <div className="p-4 space-y-4">
+              <div className="lg:hidden">
                 <div className="space-y-4">
-                  {Array.from({ length: 4}).map((_, index) => (
+                  {Array.from({ length: 6 }).map((_, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg mx-4"
+                      className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg animate-pulse"
                     >
                       <div className="flex items-center gap-4">
                         <Skeleton className="w-10 h-10 rounded-lg" />
@@ -555,107 +682,201 @@ function LevelNamePage() {
                 </div>
               </div>
 
-              <div className="hidden lg:block py-4">
-                <div className="px-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {Array.from({ length: 4 }).map((_, index) => (
-                      <div
-                        key={index}
-                        className="w-80 h-96 flex flex-col border border-gray-200 rounded-xl shadow-sm bg-white"
-                      >
-                        <div className="p-4 pb-2 flex-shrink-0">
-                          <div className="flex items-center justify-between">
-                            <Skeleton className="w-8 h-8 rounded-lg" />
-                            <Skeleton className="h-7 w-7 rounded" />
-                          </div>
-                        </div>
-                        <div className="p-4 flex flex-col gap-3 flex-1">
-                          <Skeleton className="h-5 w-3/4" />
-                          <div className="space-y-2">
-                            <Skeleton className="h-4 w-20" />
-                            <Skeleton className="h-4 w-32" />
-                            <Skeleton className="h-4 w-24" />
-                          </div>
-                        </div>
-                        <div className="p-4 pt-2 flex-shrink-0">
-                          <Skeleton className="h-6 w-16 rounded-full" />
+              <div className="hidden lg:block">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {Array.from({ length: 8 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="bg-white border border-gray-200 rounded-xl p-6 animate-pulse"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <Skeleton className="w-8 h-8 rounded-lg" />
+                        <Skeleton className="h-7 w-7 rounded" />
+                      </div>
+                      <div className="space-y-3">
+                        <Skeleton className="h-5 w-3/4" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-4 w-24" />
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           ) : faculties.length > 0 ? (
-            // Data available - show faculties
-            <div
-              ref={parentRef}
-              className="h-full overflow-y-auto scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 scrollbar-thumb-rounded-full"
-              style={{ height: "calc(100vh - 200px)" }}
-            >
-              <div className="lg:hidden py-4">
-                <MobileFacultyList
-                  faculties={faculties}
-                  editingFaculty={editingFaculty}
-                  editForm={editForm}
-                  handleEditSubmit={handleEditSubmit}
-                  handleUpdate={handleUpdate}
-                  handleDelete={handleDelete}
-                  handleVisit={handleVisit}
-                  setEditingFaculty={setEditingFaculty}
-                  editFormReset={() => editForm.reset()}
-                  creating={creating}
-                  updating={updating}
-                  deleting={deleting}
-                  parentRef={parentRef}
-                  isLoading={false}
-                  handleEditInputChange={handleEditInputChange}
-                />
+            // Data available - show faculties with optimized rendering
+            <div className="p-4 space-y-6">
+              {/* Mobile View */}
+              <div className="lg:hidden">
+                <div className="space-y-4">
+                  {faculties.map((faculty) => (
+                    <div
+                      key={faculty.id}
+                      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200 cursor-pointer"
+                      onClick={() => handleVisit(faculty)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <Building2 className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900 capitalize">
+                              {faculty.faculty.replace(/-/g, " ")}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              ID: {faculty.id.slice(0, 8)}...
+                            </p>
+                            {faculty.displayName && faculty.displayName !== faculty.faculty && (
+                              <p className="text-xs text-gray-400 mt-1">
+                                Original: {faculty.displayName}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleVisit(faculty)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleUpdate(faculty)}
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(faculty)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div className="hidden lg:block py-4">
-                <DesktopFacultyGrid
-                  faculties={faculties}
-                  editingFaculty={editingFaculty}
-                  editForm={editForm}
-                  handleEditSubmit={handleEditSubmit}
-                  handleUpdate={handleUpdate}
-                  handleDelete={handleDelete}
-                  handleVisit={handleVisit}
-                  setEditingFaculty={setEditingFaculty}
-                  editFormReset={() => editForm.reset()}
-                  creating={creating}
-                  updating={updating}
-                  deleting={deleting}
-                  parentRef={parentRef}
-                  isLoading={false}
-                  handleEditInputChange={handleEditInputChange}
-                />
+              {/* Desktop View */}
+              <div className="hidden lg:block">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {faculties.map((faculty) => (
+                    <div
+                      key={faculty.id}
+                      className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer"
+                      onClick={() => handleVisit(faculty)}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <Building2 className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleVisit(faculty)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleUpdate(faculty)}
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(faculty)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <h3 className="font-semibold text-gray-900 capitalize text-lg">
+                          {faculty.faculty.replace(/-/g, " ")}
+                        </h3>
+                        <div className="space-y-2 text-sm text-gray-600">
+                          <p>ID: {faculty.id.slice(0, 8)}...</p>
+                          <p>Created: {new Date(faculty.createdAt).toLocaleDateString()}</p>
+                          <p>Updated: {new Date(faculty.updatedAt).toLocaleDateString()}</p>
+                          {faculty.displayName && faculty.displayName !== faculty.faculty && (
+                            <p className="text-gray-500">
+                              Original: {faculty.displayName}
+                            </p>
+                          )}
+                        </div>
+                        <div className="pt-2">
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                            Academic
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
+
+              {/* Show more button for large datasets */}
+              {faculties.length > 20 && (
+                <div className="flex justify-center pt-6">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="bg-white hover:bg-gray-50 border-gray-300"
+                  >
+                    Load More Faculties
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             // No data - show empty state
-            <div className="flex items-center justify-center h-full min-h-[300px] p-4 sm:p-6">
-              <div className="text-center max-w-sm">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-                  <Building2 className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
+            <div className="flex items-center justify-center h-full min-h-[400px] p-4 sm:p-6">
+              <div className="text-center max-w-md">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Building2 className="w-10 h-10 text-blue-600" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2 sm:mb-3">
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">
                   {searchTerm ? "No matching faculties found" : "No faculties yet"}
                 </h3>
-                <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                <p className="text-base text-gray-600 mb-6">
                   {searchTerm
                     ? `No faculties match "${searchTerm}". Try adjusting your search.`
                     : "Create your first faculty to get started with examples like computer-information-systems, bachelor-of-computer-science."}
                 </p>
-                {searchTerm && (
+                {searchTerm ? (
                   <Button
                     onClick={clearSearch}
                     variant="outline"
-                    className="border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors bg-transparent"
-                    size="sm"
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     Clear Search
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => setShowCreateForm(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create First Faculty
                   </Button>
                 )}
               </div>
