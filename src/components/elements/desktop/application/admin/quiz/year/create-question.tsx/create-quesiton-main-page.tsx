@@ -216,7 +216,9 @@ export default function CreateQuestionPage() {
          yearName,
          faculty: facultyName,
          levelName,
-        }, 99] })
+        }, 100] })
+
+        queryClient.invalidateQueries({ queryKey: ["get-year-academic-stat", yearName, levelName, facultyName, "academic"] })
       } else if (!res.success && res.error) {
         const error = getErrorMessage(res.error)
         toast.error(error)
