@@ -216,7 +216,7 @@ export default function CreateQuestionPage() {
          yearName,
          faculty: facultyName,
          levelName,
-        }, 100] })
+        }, 99] })
       } else if (!res.success && res.error) {
         const error = getErrorMessage(res.error)
         toast.error(error)
